@@ -1,0 +1,18 @@
+# dependências
+node_modules/
+
+# build
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# segredos (A02) — nunca versionar
+.env
+.env.*
+!.env.example
+
+# logs e sistema
+*.log
+.DS_Store
+coverage/

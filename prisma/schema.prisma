@@ -1,0 +1,263 @@
+// SecureShop — modelo de dados.
+// Colunas terminadas em "Enc" guardam texto cifrado com AES-256-GCM (lib/crypto.ts, A04).
+// Colunas terminadas em "Hash" guardam SHA-256 ou HMAC; o valor original nunca é gravado.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  SELLER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  CANCELED
+}
+
+// Fluxo validado em lib/shipment.ts: PAGO → SEPARANDO → ENVIADO → ENTREGUE (A06)
+enum ShipmentStatus {
+  PAGO
+  SEPARANDO
+  ENVIADO
+  ENTREGUE
+}
+
+enum AuditAction {
+  LOGIN_OK
+  LOGIN_FAIL
+  LOCKOUT
+  LOGOUT
+  REGISTER
+  PASSWORD_RESET_REQUEST
+  PASSWORD_RESET
+  PASSWORD_CHANGE
+  MFA_ENABLED
+  MFA_DISABLED
+  ACCESS_DENIED
+  RATE_LIMITED
+  ORDER_CREATED
+  ORDER_PAID
+  ORDER_CANCELED
+  WEBHOOK_REJECTED
+  SHIPMENT_UPDATED
+  USER_UPDATED
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique // sempre em minúsculas
+  passwordHash     String // Argon2id
+  name             String
+  role             Role      @default(CUSTOMER)
+  active           Boolean   @default(true)
+  cpfEnc           String?
+  cpfHash          String?   @unique // HMAC-SHA256 (blind index) para busca e unicidade
+  phoneEnc         String?
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  totpSecretEnc    String?
+  totpEnabled      Boolean   @default(false)
+  totpLastStep     Int? // último passo TOTP aceito: impede reutilizar o mesmo código (replay)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  sessions      Session[]
+  resetTokens   PasswordResetToken[]
+  recoveryCodes RecoveryCode[]
+  addresses     Address[]
+  cards         PaymentCard[]
+  products      Product[]
+  cart          Cart?
+  orders        Order[]
+  shipments     Shipment[]
+  auditLogs     AuditLog[]
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  tokenHash   String   @unique // SHA-256 do token do cookie
+  userId      String
+  // true enquanto o login aguarda o código TOTP; essa sessão não dá acesso a nada
+  mfaPending  Boolean  @default(false)
+  mfaAttempts Int      @default(0) // códigos errados nesta sessão provisória
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  ip          String?
+  userAgent   String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique // SHA-256
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model RecoveryCode {
+  id       String    @id @default(cuid())
+  userId   String
+  codeHash String // SHA-256: o código tem 50 bits aleatórios, não é escolhido por pessoa
+  usedAt   DateTime?
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, codeHash])
+}
+
+// Janela fixa por chave (ex.: "login:ip:1.2.3.4"). Fica no banco para sobreviver a reinícios.
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  label      String
+  payloadEnc String // JSON cifrado: destinatário, CEP, rua, número, complemento, bairro, cidade
+  uf         String   @db.Char(2) // em claro: usado no cálculo do frete
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PaymentCard {
+  id        String   @id @default(cuid())
+  userId    String
+  numberEnc String // número completo cifrado; CVV nunca é gravado
+  holderEnc String
+  last4     String   @db.Char(4)
+  brand     String
+  expMonth  Int
+  expYear   Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
+
+  @@index([userId])
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  sellerId    String
+  name        String
+  description String
+  priceCents  Int
+  stock       Int
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  seller      User        @relation(fields: [sellerId], references: [id])
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@index([sellerId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  cartId    String
+  productId String
+  quantity  Int
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@id([cartId, productId])
+}
+
+model Order {
+  id                 String      @id @default(cuid())
+  userId             String
+  status             OrderStatus @default(PENDING_PAYMENT)
+  subtotalCents      Int
+  shippingCents      Int
+  totalCents         Int
+  shippingAddressEnc String // cópia cifrada do endereço no momento da compra
+  shippingUf         String      @db.Char(2)
+  paymentCardId      String
+  createdAt          DateTime    @default(now())
+  paidAt             DateTime?
+  user               User        @relation(fields: [userId], references: [id])
+  paymentCard        PaymentCard @relation(fields: [paymentCardId], references: [id])
+  items              OrderItem[]
+  shipments          Shipment[]
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  productId      String
+  sellerId       String
+  productName    String
+  quantity       Int
+  unitPriceCents Int // preço lido do banco no checkout, nunca do cliente (A06)
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([sellerId])
+}
+
+// Uma entrega por vendedor em cada pedido: cada vendedor vê e atualiza só a sua parte.
+model Shipment {
+  id           String         @id @default(cuid())
+  orderId      String
+  sellerId     String
+  status       ShipmentStatus @default(PAGO)
+  trackingCode String?
+  updatedAt    DateTime       @updatedAt
+  order        Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  seller       User           @relation(fields: [sellerId], references: [id])
+
+  @@unique([orderId, sellerId])
+  @@index([sellerId])
+}
+
+// A08 — Eventos de webhook já processados: o mesmo eventId não é aplicado duas vezes (replay).
+model WebhookEvent {
+  id         String   @id // eventId enviado pelo gateway
+  orderId    String
+  receivedAt DateTime @default(now())
+}
+
+// Nunca gravar senha, token, CPF ou cartão aqui (A09).
+model AuditLog {
+  id        String      @id @default(cuid())
+  action    AuditAction
+  userId    String?
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([userId])
+}
