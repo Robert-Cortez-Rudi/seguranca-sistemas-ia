@@ -100,13 +100,21 @@ export type RegisterResult =
   | { ok: true; userId: string }
   | { ok: false; error: string; fieldErrors?: FieldErrors };
 
-/** A07 — Cadastro de cliente. O perfil é sempre CUSTOMER; o formulário não escolhe papel. */
+/** A07 — Cadastro pelo formulário público: rate limit por IP antes da regra de cadastro. */
 export async function register(input: unknown, ctx: RequestContext): Promise<RegisterResult> {
   if (!(await consumeRateLimit(`register:ip:${ctx.ip}`))) {
     await audit("RATE_LIMITED", ctx, { metadata: { route: "register" } });
     return { ok: false, error: RATE_LIMIT_ERROR };
   }
+  return createCustomer(input, ctx);
+}
 
+/**
+ * Regra de cadastro de cliente (validação, política de senha, cifragem, AuditLog), sem rate limit.
+ * Só é chamada pelo register() acima e por scripts locais de operação (scripts/popular.ts),
+ * que já têm acesso direto ao banco. O perfil é sempre CUSTOMER; a entrada não escolhe papel.
+ */
+export async function createCustomer(input: unknown, ctx: RequestContext): Promise<RegisterResult> {
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: "Corrija os campos destacados.", fieldErrors: parsed.error.flatten().fieldErrors };

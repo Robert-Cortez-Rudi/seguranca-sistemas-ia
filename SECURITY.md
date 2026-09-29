@@ -176,5 +176,10 @@ quando a senha estava correta, antes do código TOTP. Quem já tivesse a senha p
   deslizante seria mais precisa.
 - **Cookie `Secure` em `http://localhost`.** Os navegadores aceitam em localhost. Fora dele, a
   aplicação precisa de HTTPS.
+- **Script de popular dados sem rate limit.** O [scripts/popular.ts](scripts/popular.ts) chama
+  `createCustomer()`, a mesma regra do cadastro (Zod, política de senha, Argon2id, cifragem,
+  AuditLog `REGISTER`) sem o rate limit por IP, que só existe em `register()`, a rota pública.
+  Quem roda o script já tem o `.env` e acesso direto ao banco, então o limite não protegeria
+  nada. Os eventos do script ficam no AuditLog com IP `script-local`.
 - **Lista de senhas comuns curta** (cerca de 100 entradas com 12+ caracteres). Em produção,
   consultar uma lista maior ou a API k-anonymity do Have I Been Pwned.

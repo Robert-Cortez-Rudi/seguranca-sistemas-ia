@@ -75,6 +75,40 @@ Criados pelo `npm run db:seed`. São dados fictícios, só para uso local.
 - O `npm run db:seed` **apaga tudo** e recria os dados de teste. Use-o para voltar ao estado
   inicial.
 
+## Popular com clientes e compras (e agendar)
+
+O `npm run popular` cria clientes fictícios, com endereço e cartão de teste, e faz compras
+com eles. Tudo passa pelas mesmas regras da aplicação: validação, cifragem, estoque, preço do
+banco, webhook de pagamento assinado e AuditLog.
+
+```bash
+npm run popular -- --clientes 5 --compras 2 --pagamento aprovar
+```
+
+| Opção | Padrão | O que faz |
+|---|---|---|
+| `--clientes N` | 3 | clientes novos (0 = compra com clientes já criados pelo script com o mesmo prefixo) |
+| `--compras N` | 1 | pedidos por cliente, com 1 a 3 produtos aleatórios |
+| `--pagamento X` | aprovar | `aprovar`, `recusar` (devolve o estoque), `aleatorio` (80% aprovado) ou `nenhum` |
+| `--prefixo P` | cliente | início do e-mail, ex.: `semana3` gera `semana3.202610051400.a1b2c3@secureshop.local` |
+| `--senha S` | `Popular-Script-2026!` | senha dos clientes criados (use-a para entrar como eles) |
+
+- O pagamento chama a aplicação em `APP_URL`, então ela precisa estar rodando (`npm run dev`).
+  Sem ela, os pedidos ficam "aguardando pagamento".
+- O script sai com código 1 se algo falhar. O Agendador de Tarefas mostra isso como falha.
+- `npm run db:seed` apaga também os clientes criados pelo script.
+
+**Agendar no Windows** (Agendador de Tarefas). Exemplo: toda segunda-feira às 14h, 5 clientes
+com o prefixo `semana3`, gravando a saída em `popular.log`:
+
+```powershell
+schtasks /Create /TN "SecureShop semana3" /SC WEEKLY /D MON /ST 14:00 /TR "cmd /c cd /d \"C:\caminho\do\projeto\" && npm run popular -- --clientes 5 --prefixo semana3 >> popular.log 2>&1"
+```
+
+Para rodar uma única vez numa data: `/SC ONCE /SD 05/10/2026 /ST 14:00`. Para ver as tarefas,
+use `schtasks /Query /TN "SecureShop semana3"`. Para apagar, use `schtasks /Delete /TN "SecureShop semana3" /F`.
+O computador precisa estar ligado e com o Docker e a aplicação rodando no horário.
+
 ## Acesse sempre pelo endereço do `APP_URL`
 
 O cookie de sessão tem a flag `Secure`. Os navegadores só a aceitam em HTTPS ou em

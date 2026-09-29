@@ -19,6 +19,7 @@
     "db:down": "docker compose down",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
+    "popular": "tsx --env-file=.env --conditions=react-server scripts/popular.ts",
     "audit": "npm audit --omit=dev"
   },
   "prisma": {
