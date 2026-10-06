@@ -14,6 +14,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:functional": "vitest run --project functional",
     "test:watch": "vitest",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",

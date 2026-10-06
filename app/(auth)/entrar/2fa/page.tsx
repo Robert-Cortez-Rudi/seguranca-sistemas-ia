@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AuthShell } from "@/components/auth-shell";
 import { getCurrentSession, safeRedirectPath } from "@/lib/auth";
 import { MfaForm } from "./mfa-form";
 
@@ -14,10 +15,8 @@ export default async function MfaPage({
   if (!session.mfaPending) redirect(next);
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <h1 className="mb-2 text-2xl font-bold">Verificação em duas etapas</h1>
-      <p className="mb-6 text-sm text-slate-600">Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
+    <AuthShell title="Verificação em duas etapas" subtitle="Digite o código de 6 dígitos do seu aplicativo autenticador.">
       <MfaForm next={next} />
-    </main>
+    </AuthShell>
   );
 }

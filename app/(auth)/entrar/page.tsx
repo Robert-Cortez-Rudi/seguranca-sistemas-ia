@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AuthShell } from "@/components/auth-shell";
 import { getCurrentUser, safeRedirectPath } from "@/lib/auth";
 import { LoginForm } from "./login-form";
 
@@ -19,9 +20,8 @@ export default async function LoginPage({
   const notice = params.cadastro === "ok" ? notices.cadastro : params.senha === "ok" ? notices.senha : undefined;
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">Entrar</h1>
+    <AuthShell title="Entrar" subtitle="Que bom ver você de novo.">
       <LoginForm next={next} notice={notice} />
-    </main>
+    </AuthShell>
   );
 }

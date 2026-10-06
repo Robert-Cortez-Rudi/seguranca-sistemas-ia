@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthShell } from "@/components/auth-shell";
 import { isResetTokenUsable } from "@/lib/services/password";
 import { ResetForm } from "./reset-form";
 
@@ -12,19 +13,18 @@ export default async function ResetPasswordPage({
   const usable = typeof token === "string" && (await isResetTokenUsable(token));
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">Redefinir senha</h1>
+    <AuthShell title="Redefinir senha">
       {usable ? (
         <ResetForm token={token} />
       ) : (
-        <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <p className="notice notice-error">
           Link inválido ou expirado.{" "}
-          <Link href="/esqueci-senha" className="font-semibold underline">
+          <Link href="/esqueci-senha" className="link">
             Peça um novo
           </Link>
           .
         </p>
       )}
-    </main>
+    </AuthShell>
   );
 }

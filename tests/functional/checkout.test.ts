@@ -5,8 +5,8 @@ import { calcShippingCents } from "@/lib/shipping";
 import { addCard, createAddress } from "@/lib/services/account";
 import { addToCart, getCart, removeFromCart, setCartQuantity } from "@/lib/services/cart";
 import { checkout } from "@/lib/services/checkout";
-import { resetDb } from "./helpers/db";
-import { createUser, ctx } from "./helpers/factory";
+import { resetDb } from "../helpers/db";
+import { createUser, ctx } from "../helpers/factory";
 
 beforeEach(resetDb);
 
@@ -152,14 +152,5 @@ describe("checkout (A06)", () => {
   it("carrinho vazio não gera pedido", async () => {
     const { customer, addressId, cardId } = await setup();
     expect(await checkout(customer.id, { addressId, cardId }, ctx())).toEqual({ ok: false, error: "Seu carrinho está vazio." });
-  });
-});
-
-describe("frete", () => {
-  it("por região e grátis a partir de R$ 500", () => {
-    expect(calcShippingCents("SP", 1000)).toBe(1500);
-    expect(calcShippingCents("RS", 1000)).toBe(2500);
-    expect(calcShippingCents("AM", 1000)).toBe(3500);
-    expect(calcShippingCents("AM", 50000)).toBe(0);
   });
 });

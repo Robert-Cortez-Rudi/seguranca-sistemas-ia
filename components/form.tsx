@@ -21,8 +21,8 @@ export function Field({
   // Passe `id` quando a página tiver dois formulários com o mesmo `name`.
   const id = idProp ?? `f-${name}`;
   return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="label">
         {label}
       </label>
       <input
@@ -31,11 +31,11 @@ export function Field({
         type={type}
         aria-invalid={errors?.length ? true : undefined}
         aria-describedby={errors?.length ? `${id}-err` : undefined}
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        className="input"
         {...rest}
       />
       {errors?.length ? (
-        <p id={`${id}-err`} className="text-xs text-red-600">
+        <p id={`${id}-err`} className="field-error">
           {errors[0]}
         </p>
       ) : null}
@@ -46,18 +46,14 @@ export function Field({
 export function SubmitButton({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className={`w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 ${className}`}
-    >
+    <button type="submit" disabled={pending} className={`btn btn-primary w-full ${className}`}>
       {pending ? "Aguarde…" : children}
     </button>
   );
 }
 
 export function FormMessage({ error, success }: { error?: string; success?: string }) {
-  if (error) return <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>;
-  if (success) return <p role="status" className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{success}</p>;
+  if (error) return <p role="alert" className="notice notice-error">{error}</p>;
+  if (success) return <p role="status" className="notice notice-success">{success}</p>;
   return null;
 }

@@ -9,17 +9,17 @@ vulnerabilidades, lint e typecheck limpos.
 
 | Exigência | Onde está o teste |
 |---|---|
-| IDOR: cliente A não acessa pedido do cliente B | [tests/access-control.test.ts](tests/access-control.test.ts) — "cliente A não acessa pedido do cliente B"; no navegador, cliente2 recebe 404 no pedido e no pagamento do cliente1 |
-| Brute force: 6ª tentativa bloqueada | [tests/auth.test.ts](tests/auth.test.ts) — "brute force: a 6ª tentativa é bloqueada mesmo com a senha correta" |
-| Token de reset expirado ou reutilizado é rejeitado | [tests/password-reset.test.ts](tests/password-reset.test.ts) — "token expirado…", "token reutilizado…", "dois usos simultâneos…"; no navegador, o link reaberto mostra "Link inválido ou expirado" |
-| `' OR 1=1--` e `<script>alert(1)</script>` não causam efeito | [tests/injection.test.ts](tests/injection.test.ts), [tests/auth.test.ts](tests/auth.test.ts); no navegador, produto com `<script>` no nome aparece como texto e nenhum `alert()` dispara |
-| Preço adulterado no checkout é ignorado | [tests/checkout.test.ts](tests/checkout.test.ts) — "preço adulterado no checkout é ignorado"; no navegador, campos `totalCents=1` injetados no formulário e o pedido saiu com R$ 115,00 |
+| IDOR: cliente A não acessa pedido do cliente B | [tests/functional/access-control.test.ts](tests/functional/access-control.test.ts) — "cliente A não acessa pedido do cliente B"; no navegador, cliente2 recebe 404 no pedido e no pagamento do cliente1 |
+| Brute force: 6ª tentativa bloqueada | [tests/functional/auth.test.ts](tests/functional/auth.test.ts) — "brute force: a 6ª tentativa é bloqueada mesmo com a senha correta" |
+| Token de reset expirado ou reutilizado é rejeitado | [tests/functional/password-reset.test.ts](tests/functional/password-reset.test.ts) — "token expirado…", "token reutilizado…", "dois usos simultâneos…"; no navegador, o link reaberto mostra "Link inválido ou expirado" |
+| `' OR 1=1--` e `<script>alert(1)</script>` não causam efeito | [tests/functional/injection.test.ts](tests/functional/injection.test.ts), [tests/functional/auth.test.ts](tests/functional/auth.test.ts); no navegador, produto com `<script>` no nome aparece como texto e nenhum `alert()` dispara |
+| Preço adulterado no checkout é ignorado | [tests/functional/checkout.test.ts](tests/functional/checkout.test.ts) — "preço adulterado no checkout é ignorado"; no navegador, campos `totalCents=1` injetados no formulário e o pedido saiu com R$ 115,00 |
 
 ## A01 — Broken Access Control
 
 | Controle | Onde | Evidência |
 |---|---|---|
-| Middleware (runtime Node) valida a sessão **no banco** e o perfil em `/conta`, `/vendedor`, `/admin`, `/carrinho`, `/checkout`; a sessão provisória de 2FA não passa | [middleware.ts](middleware.ts), [lib/route-access.ts](lib/route-access.ts) | [tests/access-control.test.ts](tests/access-control.test.ts) + navegador |
+| Middleware (runtime Node) valida a sessão **no banco** e o perfil em `/conta`, `/vendedor`, `/admin`, `/carrinho`, `/checkout`; a sessão provisória de 2FA não passa | [middleware.ts](middleware.ts), [lib/route-access.ts](lib/route-access.ts) | [tests/unit/route-access.test.ts](tests/unit/route-access.test.ts) + navegador |
 | Caminho normalizado antes da checagem (`/ADMIN`, `//admin//`, `/%61dmin`); caminho mal codificado é tratado como protegido | [lib/route-access.ts](lib/route-access.ts) | idem |
 | Banco fora do ar no middleware → 503 (fail closed), nunca libera o acesso | [middleware.ts](middleware.ts) | — |
 | Perfil errado recebe **404** (não 403) e gera `ACCESS_DENIED` no AuditLog | [middleware.ts](middleware.ts), [lib/auth.ts](lib/auth.ts) | navegador: 6 negações registradas |
@@ -29,16 +29,17 @@ vulnerabilidades, lint e typecheck limpos.
 | IDs validados por formato antes de chegar ao banco | [lib/schemas.ts](lib/schemas.ts) (`idSchema`) | teste "id malicioso não chega ao banco" |
 | O id do dono nunca vem do formulário: sai da sessão | `app/**/actions.ts` | — |
 | Vendedor vê só as próprias vendas, só os próprios itens do pedido, sem CPF nem cartão do cliente | [lib/services/seller.ts](lib/services/seller.ts) | teste + navegador |
-| Admin não altera a própria conta (evita se trancar para fora); desativar ou mudar perfil derruba as sessões do alvo | [lib/services/admin.ts](lib/services/admin.ts) | [tests/payment-seller-admin.test.ts](tests/payment-seller-admin.test.ts) |
-| CSRF: Server Actions só aceitam POST com Origin igual ao Host (checagem nativa do Next) + cookie `SameSite=Lax`; rotas `/api/*` que alteram estado exigem `Origin` igual a `APP_URL` | [lib/origin.ts](lib/origin.ts), [middleware.ts](middleware.ts) | [tests/injection.test.ts](tests/injection.test.ts) — "CSRF em rotas de API" |
+| Admin não altera a própria conta (evita se trancar para fora); desativar ou mudar perfil derruba as sessões do alvo | [lib/services/admin.ts](lib/services/admin.ts) | [tests/functional/payment-seller-admin.test.ts](tests/functional/payment-seller-admin.test.ts) |
+| CSRF: Server Actions só aceitam POST com Origin igual ao Host (checagem nativa do Next) + cookie `SameSite=Lax`; rotas `/api/*` que alteram estado exigem `Origin` igual a `APP_URL` | [lib/origin.ts](lib/origin.ts), [middleware.ts](middleware.ts) | [tests/unit/origin.test.ts](tests/unit/origin.test.ts) — "CSRF em rotas de API" |
 | Redirecionamento pós-login só para caminho interno (bloqueia `//evil.example`) | [lib/auth.ts](lib/auth.ts) | navegador |
 
 ## A02 — Security Misconfiguration
 
 | Controle | Onde | Evidência |
 |---|---|---|
-| CSP com nonce por requisição; `script-src` sem `unsafe-inline` e sem `unsafe-eval` em produção; `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` | [lib/csp.ts](lib/csp.ts), [middleware.ts](middleware.ts) | [tests/csp.test.ts](tests/csp.test.ts); navegador sem nenhuma violação de CSP em todas as telas |
+| CSP com nonce por requisição; `script-src` sem `unsafe-inline` e sem `unsafe-eval` em produção; `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` | [lib/csp.ts](lib/csp.ts), [middleware.ts](middleware.ts) | [tests/unit/csp.test.ts](tests/unit/csp.test.ts); navegador sem nenhuma violação de CSP em todas as telas |
 | Todas as páginas renderizadas por requisição, para que o nonce chegue aos scripts | [app/layout.tsx](app/layout.tsx) | build lista todas as rotas como `ƒ (Dynamic)` |
+| Interface (design system, animações e fontes) sem afrouxar a CSP: animações só em CSS de arquivo, nenhum `style` inline, fontes servidas do próprio domínio via `next/font` (`font-src 'self'`) | [app/globals.css](app/globals.css), [app/layout.tsx](app/layout.tsx) | `grep -rn "style=" app components` não retorna nada; build de produção sem dependência nova |
 | HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP | [next.config.ts](next.config.ts) | conferido com `curl -D -` no build de produção |
 | Cabeçalho `X-Powered-By` removido | [next.config.ts](next.config.ts) | idem |
 | Segredos só no `.env` (fora do git); `.env.example` sem valores; gerador de segredos aleatórios | [.gitignore](.gitignore), [.env.example](.env.example), [scripts/gen-secrets.mjs](scripts/gen-secrets.mjs) | `git check-ignore .env` |
@@ -60,21 +61,21 @@ no servidor a cada requisição, o que custa desempenho em troca de nunca precis
 
 | Controle | Onde | Evidência |
 |---|---|---|
-| CPF, telefone, endereço, número e titular do cartão, segredo TOTP e endereço do pedido cifrados com AES-256-GCM, IV aleatório de 12 bytes por registro | [lib/crypto.ts](lib/crypto.ts) | [tests/crypto.test.ts](tests/crypto.test.ts) |
+| CPF, telefone, endereço, número e titular do cartão, segredo TOTP e endereço do pedido cifrados com AES-256-GCM, IV aleatório de 12 bytes por registro | [lib/crypto.ts](lib/crypto.ts) | [tests/unit/crypto.test.ts](tests/unit/crypto.test.ts) |
 | Contexto da coluna como AAD: valor cifrado copiado para outra coluna não decifra | [lib/crypto.ts](lib/crypto.ts) | idem |
 | Chave inválida ou ausente derruba a operação (fail closed) | [lib/crypto.ts](lib/crypto.ts) | idem |
 | CPF com blind index HMAC-SHA256 (`cpfHash`, único) usando chave separada da de cifragem | [lib/crypto.ts](lib/crypto.ts), [prisma/schema.prisma](prisma/schema.prisma) | idem |
 | Cartão: número cifrado + `last4` + bandeira. CVV validado e descartado, sem coluna no banco | [prisma/schema.prisma](prisma/schema.prisma), [lib/services/account.ts](lib/services/account.ts) | teste "cartão: número cifrado, CVV descartado…" |
-| Exibição mascarada: `***.456.789-**`, `**** 4242`, `(11) *****-4321` | [lib/mask.ts](lib/mask.ts) | [tests/validators.test.ts](tests/validators.test.ts); navegador confere o CPF e que o número do cartão não está no HTML |
+| Exibição mascarada: `***.456.789-**`, `**** 4242`, `(11) *****-4321` | [lib/mask.ts](lib/mask.ts) | [tests/unit/validators.test.ts](tests/unit/validators.test.ts); navegador confere o CPF e que o número do cartão não está no HTML |
 | `select` explícito no Prisma: listagens não trazem campos cifrados nem hash de senha | [lib/services/](lib/services/) | teste "listagem de usuários não traz CPF…" |
-| Tokens de sessão e de reset guardados como SHA-256 | [lib/session.ts](lib/session.ts) | [tests/auth.test.ts](tests/auth.test.ts) |
+| Tokens de sessão e de reset guardados como SHA-256 | [lib/session.ts](lib/session.ts) | [tests/functional/auth.test.ts](tests/functional/auth.test.ts) |
 
 ## A05 — Injection
 
 | Controle | Onde | Evidência |
 |---|---|---|
-| Toda entrada validada com Zod no servidor: CPF com dígito verificador, CEP, Luhn, validade do cartão, UF, e-mail, quantidades, preços, ids | [lib/schemas.ts](lib/schemas.ts), [lib/validators.ts](lib/validators.ts) | [tests/validators.test.ts](tests/validators.test.ts) |
-| Só Prisma. O único SQL manual (contador do rate limit) usa `$queryRaw` com template, que é parametrizado | [lib/rate-limit.ts](lib/rate-limit.ts) | [tests/injection.test.ts](tests/injection.test.ts) |
+| Toda entrada validada com Zod no servidor: CPF com dígito verificador, CEP, Luhn, validade do cartão, UF, e-mail, quantidades, preços, ids | [lib/schemas.ts](lib/schemas.ts), [lib/validators.ts](lib/validators.ts) | [tests/unit/validators.test.ts](tests/unit/validators.test.ts) |
+| Só Prisma. O único SQL manual (contador do rate limit) usa `$queryRaw` com template, que é parametrizado | [lib/rate-limit.ts](lib/rate-limit.ts) | [tests/functional/injection.test.ts](tests/functional/injection.test.ts) |
 | Lint proíbe `dangerouslySetInnerHTML`, `$queryRawUnsafe`, `$executeRawUnsafe` e `eval` | [eslint.config.mjs](eslint.config.mjs) | `npm run lint` |
 | Texto de vendedores (nome, descrição) exibido só por JSX, que escapa HTML | `app/**` | navegador: `<script>` exibido como texto, nenhum `alert()` |
 | Texto livre sem caracteres de controle | [lib/schemas.ts](lib/schemas.ts) | — |
@@ -98,7 +99,7 @@ no servidor a cada requisição, o que custa desempenho em troca de nunca precis
 | Controle | Onde | Evidência |
 |---|---|---|
 | Argon2id, `m=19456, t=2, p=1` | [lib/password.ts](lib/password.ts) | teste confere o prefixo `$argon2id$v=19$m=19456,t=2,p=1$` |
-| Senha de 12 a 128 caracteres, sem senha comum, sem repetir um caractere, sem conter o e-mail | [lib/password.ts](lib/password.ts), [lib/common-passwords.ts](lib/common-passwords.ts) | [tests/auth.test.ts](tests/auth.test.ts) |
+| Senha de 12 a 128 caracteres, sem senha comum, sem repetir um caractere, sem conter o e-mail | [lib/password.ts](lib/password.ts), [lib/common-passwords.ts](lib/common-passwords.ts) | [tests/functional/auth.test.ts](tests/functional/auth.test.ts) |
 | Mensagem única "E-mail ou senha inválidos." para e-mail inexistente, senha errada, conta bloqueada e conta desativada | [lib/services/auth.ts](lib/services/auth.ts) | idem |
 | E-mail inexistente também passa por um Argon2 (hash descartável), para não vazar por tempo de resposta | [lib/services/auth.ts](lib/services/auth.ts) | — |
 | Bloqueio de 15 min após 5 falhas; a 6ª tentativa é recusada mesmo com a senha certa | [lib/services/auth.ts](lib/services/auth.ts) | teste "brute force…" |
@@ -106,7 +107,7 @@ no servidor a cada requisição, o que custa desempenho em troca de nunca precis
 | IP do cliente não pode ser forjado com `X-Forwarded-For`: o [server.mjs](server.mjs) reescreve o cabeçalho com o IP do socket (ou com o IP acrescentado pelo proxy confiável, via `TRUST_PROXY_HOPS`) | [server.mjs](server.mjs) | navegador com `X-Forwarded-For: 6.6.6.6` gravou `::1` no AuditLog |
 | Cadastro sempre cria CUSTOMER; campo `role` enviado pelo cliente é ignorado | [lib/services/auth.ts](lib/services/auth.ts) | teste "mass assignment" |
 | E-mail ou CPF já cadastrado: mesma mensagem genérica, sem dizer qual dos dois | [lib/services/auth.ts](lib/services/auth.ts) | teste de conflito |
-| Sessão: token de 32 bytes (`crypto.randomBytes`), SHA-256 no banco, expira em 8h, apagada se expirada ou se o usuário for desativado | [lib/session.ts](lib/session.ts) | [tests/auth.test.ts](tests/auth.test.ts) |
+| Sessão: token de 32 bytes (`crypto.randomBytes`), SHA-256 no banco, expira em 8h, apagada se expirada ou se o usuário for desativado | [lib/session.ts](lib/session.ts) | [tests/functional/auth.test.ts](tests/functional/auth.test.ts) |
 | Cookie `__Host-ss_session`: `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/` | [lib/auth.ts](lib/auth.ts) | navegador confirmou os atributos e que `document.cookie` não o enxerga |
 | Sessão regenerada no login e na troca de senha | [app/(auth)/actions.ts](app/(auth)/actions.ts), [lib/services/password.ts](lib/services/password.ts) | teste "troca de senha logado" |
 
@@ -118,7 +119,7 @@ cabeçalho a cada tentativa e nunca atingiria o limite por IP.
 
 | Controle | Onde | Evidência |
 |---|---|---|
-| Token de 32 bytes, SHA-256 no banco, validade de 15 min, uso único (marcação condicional `usedAt IS NULL` dentro de transação, resiste a duas requisições simultâneas) | [lib/services/password.ts](lib/services/password.ts) | [tests/password-reset.test.ts](tests/password-reset.test.ts): expirado, reutilizado, paralelo |
+| Token de 32 bytes, SHA-256 no banco, validade de 15 min, uso único (marcação condicional `usedAt IS NULL` dentro de transação, resiste a duas requisições simultâneas) | [lib/services/password.ts](lib/services/password.ts) | [tests/functional/password-reset.test.ts](tests/functional/password-reset.test.ts): expirado, reutilizado, paralelo |
 | Resposta idêntica exista o e-mail ou não; o envio do e-mail não é aguardado, para o tempo de resposta não denunciar a conta | idem | teste "resposta idêntica" |
 | Novo pedido invalida o link anterior | idem | teste "pedir de novo invalida" |
 | Após redefinir: token consumido, todas as sessões derrubadas, bloqueio zerado, `PASSWORD_RESET` no AuditLog, e-mail avisando da troca | idem | teste + navegador com Mailpit |
@@ -128,7 +129,7 @@ cabeçalho a cada tentativa e nunca atingiria o limite por IP.
 
 | Controle | Onde | Evidência |
 |---|---|---|
-| Segredo TOTP cifrado (AES-GCM); 2FA só liga depois de um código válido | [lib/services/mfa.ts](lib/services/mfa.ts) | [tests/mfa.test.ts](tests/mfa.test.ts) |
+| Segredo TOTP cifrado (AES-GCM); 2FA só liga depois de um código válido | [lib/services/mfa.ts](lib/services/mfa.ts) | [tests/functional/mfa.test.ts](tests/functional/mfa.test.ts) |
 | Login em duas etapas: após a senha, sessão provisória `mfaPending` de 5 min que não abre nenhuma página | [lib/services/auth.ts](lib/services/auth.ts), [middleware.ts](middleware.ts) | teste + navegador (`/conta` redireciona para `/entrar`) |
 | Anti-replay: o passo TOTP usado fica gravado (`totpLastStep`) e o mesmo código não entra de novo | [lib/services/mfa.ts](lib/services/mfa.ts) | teste "replay" |
 | Erros de código contam para o bloqueio da conta; com 2FA ativo a senha certa não zera o contador | idem | testes "erros de código contam…" e "senha certa não zera…" |
@@ -143,7 +144,7 @@ quando a senha estava correta, antes do código TOTP. Quem já tivesse a senha p
 
 | Controle | Onde | Evidência |
 |---|---|---|
-| Webhook de pagamento assinado com HMAC-SHA256 sobre `timestamp.corpo`, comparação em tempo constante, assinatura conferida antes de ler o corpo | [lib/services/payment.ts](lib/services/payment.ts), [app/api/webhooks/pagamento/route.ts](app/api/webhooks/pagamento/route.ts) | [tests/payment-seller-admin.test.ts](tests/payment-seller-admin.test.ts): assinatura forjada, ausente e corpo alterado; navegador: chamada forjada recebe 401 |
+| Webhook de pagamento assinado com HMAC-SHA256 sobre `timestamp.corpo`, comparação em tempo constante, assinatura conferida antes de ler o corpo | [lib/services/payment.ts](lib/services/payment.ts), [app/api/webhooks/pagamento/route.ts](app/api/webhooks/pagamento/route.ts) | [tests/functional/payment-seller-admin.test.ts](tests/functional/payment-seller-admin.test.ts): assinatura forjada, ausente e corpo alterado; navegador: chamada forjada recebe 401 |
 | Anti-replay: timestamp com no máximo 5 min de diferença + `eventId` único (tabela `WebhookEvent`) | idem | testes "replay…" e "timestamp com mais de 5 minutos…" |
 | Valor pago precisa ser igual ao total do pedido; o pedido só sai de `PENDING_PAYMENT` uma vez | idem | testes "valor diferente…" e "pedido já pago…" |
 | Corpo limitado a 4 KB; resposta genérica em qualquer recusa, com o motivo só no AuditLog | idem | — |

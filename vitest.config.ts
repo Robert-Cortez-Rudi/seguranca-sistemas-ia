@@ -9,11 +9,29 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
-    globalSetup: ["tests/global-setup.ts"],
-    setupFiles: ["tests/setup.ts"],
-    // Testes de integração compartilham o banco de teste: rodar em série evita corrida.
+    // Testes funcionais compartilham o banco de teste: rodar em série evita corrida.
     fileParallelism: false,
     testTimeout: 20000,
+    projects: [
+      {
+        // Unitários: funções puras de lib/, sem banco e sem Docker.
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["tests/unit/**/*.test.ts"],
+          setupFiles: ["tests/setup-unit.ts"],
+        },
+      },
+      {
+        // Funcionais: fluxos completos (serviços + Prisma) contra o banco de teste.
+        extends: true,
+        test: {
+          name: "functional",
+          include: ["tests/functional/**/*.test.ts"],
+          globalSetup: ["tests/global-setup.ts"],
+          setupFiles: ["tests/setup.ts"],
+        },
+      },
+    ],
   },
 });

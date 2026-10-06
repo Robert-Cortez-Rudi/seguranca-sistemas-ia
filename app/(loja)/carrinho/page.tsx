@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, swatchClass } from "@/lib/format";
 import { MAX_ITEM_QUANTITY } from "@/lib/schemas";
 import { getCart } from "@/lib/services/cart";
 import { updateCartAction } from "../actions";
@@ -12,43 +12,52 @@ export default async function CartPage() {
   const allAvailable = cart.items.every((i) => i.available);
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 px-4 py-10">
-      <h1 className="text-2xl font-bold">Carrinho</h1>
+    <main className="mx-auto max-w-3xl space-y-7 px-4 py-10">
+      <h1 className="page-title">Carrinho</h1>
       {cart.items.length === 0 ? (
-        <p className="text-slate-500">
-          Seu carrinho está vazio. <Link href="/" className="text-indigo-600 hover:underline">Ver produtos</Link>
-        </p>
+        <div className="card space-y-4 p-8 text-center">
+          <p className="font-display text-xl font-extrabold">Seu carrinho está vazio.</p>
+          <Link href="/" className="btn btn-primary">
+            Ver produtos <span className="arrow" aria-hidden="true">→</span>
+          </Link>
+        </div>
       ) : (
         <>
-          <ul className="space-y-3">
+          <ul className="stagger space-y-4">
             {cart.items.map((i) => (
-              <li key={i.productId} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white p-4 text-sm shadow-sm">
-                <div>
-                  <p className="font-semibold">{i.name}</p>
-                  <p className="text-slate-500">{formatMoney(i.unitPriceCents)} cada</p>
-                  {!i.available && <p className="text-red-600">Indisponível na quantidade escolhida</p>}
+              <li key={i.productId} className="card flex flex-wrap items-center gap-4 p-4 text-sm">
+                <div className={`swatch ${swatchClass(i.productId)} h-14 w-14 shrink-0 rounded-xl border-[2.5px] border-ink text-2xl`} aria-hidden="true">
+                  <span>{i.name.charAt(0).toUpperCase()}</span>
                 </div>
-                <form action={updateCartAction} className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-base font-extrabold leading-tight">{i.name}</p>
+                  <p className="text-muted">{formatMoney(i.unitPriceCents)} cada</p>
+                  {!i.available && <p className="field-error">Indisponível na quantidade escolhida</p>}
+                </div>
+                <form action={updateCartAction} className="flex flex-wrap items-center gap-2">
                   <input type="hidden" name="productId" value={i.productId} />
                   <label className="sr-only" htmlFor={`q-${i.productId}`}>Quantidade</label>
-                  <input id={`q-${i.productId}`} name="quantity" type="number" min={1} max={MAX_ITEM_QUANTITY} defaultValue={i.quantity} className="w-16 rounded-md border border-slate-300 px-2 py-1" />
-                  <button name="intent" value="update" className="text-indigo-600 hover:underline">Atualizar</button>
-                  <button name="intent" value="remove" className="text-red-600 hover:underline">Remover</button>
+                  <input id={`q-${i.productId}`} name="quantity" type="number" min={1} max={MAX_ITEM_QUANTITY} defaultValue={i.quantity} className="input w-20 py-1.5" />
+                  <button name="intent" value="update" className="btn btn-sm">Atualizar</button>
+                  <button name="intent" value="remove" className="link link-danger cursor-pointer text-xs">Remover</button>
                 </form>
-                <p className="w-full text-right font-semibold sm:w-auto">{formatMoney(i.lineCents)}</p>
+                <p className="price w-full text-right text-xl sm:w-28">{formatMoney(i.lineCents)}</p>
               </li>
             ))}
           </ul>
-          <p className="text-right text-lg">
-            Subtotal: <strong>{formatMoney(cart.subtotalCents)}</strong>
-          </p>
-          {allAvailable ? (
-            <Link href="/checkout" className="block rounded-md bg-indigo-600 px-4 py-2 text-center font-semibold text-white hover:bg-indigo-700">
-              Finalizar compra
-            </Link>
-          ) : (
-            <p className="text-right text-sm text-red-600">Ajuste os itens indisponíveis para continuar.</p>
-          )}
+          <div className="card flex flex-wrap items-center justify-between gap-4 bg-sun p-5">
+            <p className="text-sm font-bold uppercase tracking-wide">
+              Subtotal
+              <span className="price block text-3xl normal-case">{formatMoney(cart.subtotalCents)}</span>
+            </p>
+            {allAvailable ? (
+              <Link href="/checkout" className="btn btn-blue">
+                Finalizar compra <span className="arrow" aria-hidden="true">→</span>
+              </Link>
+            ) : (
+              <p className="field-error">Ajuste os itens indisponíveis para continuar.</p>
+            )}
+          </div>
         </>
       )}
     </main>

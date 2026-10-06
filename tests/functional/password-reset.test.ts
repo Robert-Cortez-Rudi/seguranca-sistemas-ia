@@ -19,8 +19,8 @@ import {
   resetPassword,
 } from "@/lib/services/password";
 import { validateSessionToken } from "@/lib/session";
-import { resetDb } from "./helpers/db";
-import { createUser, ctx, PASSWORD } from "./helpers/factory";
+import { resetDb } from "../helpers/db";
+import { createUser, ctx, PASSWORD } from "../helpers/factory";
 
 const NEW_PASSWORD = "Nova-Senha-Bem-Forte-77";
 

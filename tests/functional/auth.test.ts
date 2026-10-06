@@ -4,8 +4,8 @@ import { db } from "@/lib/db";
 import { LOGIN_ERROR, login, RATE_LIMIT_ERROR, register, REGISTER_CONFLICT_ERROR } from "@/lib/services/auth";
 import { validateSessionToken } from "@/lib/session";
 import { generateCpf } from "@/lib/validators";
-import { resetDb } from "./helpers/db";
-import { createUser, ctx, PASSWORD } from "./helpers/factory";
+import { resetDb } from "../helpers/db";
+import { createUser, ctx, PASSWORD } from "../helpers/factory";
 
 beforeEach(resetDb);
 

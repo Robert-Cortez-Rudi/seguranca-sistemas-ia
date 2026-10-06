@@ -21,9 +21,9 @@ export function AddressForm() {
       <Field label="Complemento" name="complement" maxLength={60} errors={fe?.complement} />
       <Field label="Bairro" name="district" required maxLength={60} errors={fe?.district} />
       <Field label="Cidade" name="city" required maxLength={60} errors={fe?.city} />
-      <div className="space-y-1">
-        <label htmlFor="f-uf" className="block text-sm font-medium text-slate-700">UF</label>
-        <select id="f-uf" name="uf" required className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
+      <div className="space-y-1.5">
+        <label htmlFor="f-uf" className="label">UF</label>
+        <select id="f-uf" name="uf" required className="input">
           {UFS.map((uf) => (
             <option key={uf}>{uf}</option>
           ))}

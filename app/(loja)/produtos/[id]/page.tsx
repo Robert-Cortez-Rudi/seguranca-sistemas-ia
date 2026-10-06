@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, swatchClass } from "@/lib/format";
 import { MAX_ITEM_QUANTITY } from "@/lib/schemas";
 import { getProduct } from "@/lib/services/catalog";
 import { AddToCart } from "./add-to-cart";
@@ -12,21 +12,31 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const user = await getCurrentUser();
 
   return (
-    <main className="mx-auto max-w-2xl space-y-4 px-4 py-10">
-      <h1 className="text-2xl font-bold">{product.name}</h1>
-      {/* Texto do vendedor exibido como texto: sem dangerouslySetInnerHTML (A05) */}
-      <p className="whitespace-pre-line text-slate-700">{product.description}</p>
-      <p className="text-2xl font-bold text-indigo-700">{formatMoney(product.priceCents)}</p>
-      <p className="text-sm text-slate-500">Vendido por {product.seller.name}</p>
-      {product.stock === 0 ? (
-        <p className="font-semibold text-red-600">Esgotado</p>
-      ) : user?.role === "CUSTOMER" ? (
-        <AddToCart productId={product.id} max={Math.min(product.stock, MAX_ITEM_QUANTITY)} />
-      ) : !user ? (
-        <Link href={`/entrar?next=/produtos/${product.id}`} className="inline-block text-indigo-600 hover:underline">
-          Entre para comprar
-        </Link>
-      ) : null}
+    <main className="mx-auto grid max-w-5xl gap-8 px-4 py-10 md:grid-cols-2 md:items-start">
+      <div className="card overflow-hidden">
+        <div className={`swatch ${swatchClass(product.id)} aspect-square border-b-0 text-[10rem]`} aria-hidden="true">
+          <span className="float">{product.name.charAt(0).toUpperCase()}</span>
+        </div>
+      </div>
+      <div className="space-y-5">
+        <Link href="/" className="link text-sm">← Todos os produtos</Link>
+        <h1 className="page-title">{product.name}</h1>
+        <p className="text-sm font-semibold text-muted">Vendido por {product.seller.name}</p>
+        {/* Texto do vendedor exibido como texto: sem dangerouslySetInnerHTML (A05) */}
+        <p className="whitespace-pre-line text-muted">{product.description}</p>
+        <p className="price text-5xl">{formatMoney(product.priceCents)}</p>
+        {product.stock === 0 ? (
+          <p className="badge bg-coral text-sm">Esgotado</p>
+        ) : user?.role === "CUSTOMER" ? (
+          <div className="card p-5">
+            <AddToCart productId={product.id} max={Math.min(product.stock, MAX_ITEM_QUANTITY)} />
+          </div>
+        ) : !user ? (
+          <Link href={`/entrar?next=/produtos/${product.id}`} className="btn btn-primary">
+            Entre para comprar <span className="arrow" aria-hidden="true">→</span>
+          </Link>
+        ) : null}
+      </div>
     </main>
   );
 }

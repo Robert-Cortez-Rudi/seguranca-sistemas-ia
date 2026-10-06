@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
+import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
 import { headers } from "next/headers";
 import { Header } from "@/components/header";
 import "./globals.css";
+
+// A02 — next/font baixa as fontes no build e as serve do próprio domínio:
+// a CSP continua com font-src 'self', sem liberar CDN nenhuma.
+const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-display-face", display: "swap" });
+const body = Instrument_Sans({ subsets: ["latin"], variable: "--font-body", display: "swap" });
 
 export const metadata: Metadata = {
   title: "SecureShop",
@@ -14,10 +20,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   await headers();
 
   return (
-    <html lang="pt-BR">
-      <body className="min-h-screen bg-slate-50 text-slate-900">
+    <html lang="pt-BR" className={`${display.variable} ${body.variable}`}>
+      <body className="flex min-h-screen flex-col antialiased">
         <Header />
-        {children}
+        <div className="flex-1">{children}</div>
+        <footer className="border-t-[2.5px] border-ink bg-ink px-4 py-5 text-center text-xs font-semibold text-cream">
+          SecureShop · projeto acadêmico de Segurança de Sistemas · OWASP Top 10:2025
+        </footer>
       </body>
     </html>
   );

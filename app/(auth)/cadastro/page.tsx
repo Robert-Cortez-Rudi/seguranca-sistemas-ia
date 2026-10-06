@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AuthShell } from "@/components/auth-shell";
 import { getCurrentUser } from "@/lib/auth";
 import { RegisterForm } from "./register-form";
 
@@ -6,9 +7,8 @@ import { RegisterForm } from "./register-form";
 export default async function RegisterPage() {
   if (await getCurrentUser()) redirect("/");
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">Criar conta</h1>
+    <AuthShell title="Criar conta" subtitle="Leva um minuto. CPF e telefone ficam cifrados no banco.">
       <RegisterForm />
-    </main>
+    </AuthShell>
   );
 }

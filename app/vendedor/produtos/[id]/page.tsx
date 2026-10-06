@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getSellerProduct } from "@/lib/services/seller";
@@ -9,9 +10,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const product = await getSellerProduct(seller.id, (await params).id);
   if (!product) notFound();
   return (
-    <main className="mx-auto max-w-lg px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold">Editar produto</h1>
-      <ProductForm product={product} />
+    <main className="mx-auto max-w-lg space-y-6 px-4 py-10">
+      <Link href="/vendedor" className="link text-sm">← Meus produtos</Link>
+      <h1 className="page-title">Editar produto</h1>
+      <div className="card p-6">
+        <ProductForm product={product} />
+      </div>
     </main>
   );
 }

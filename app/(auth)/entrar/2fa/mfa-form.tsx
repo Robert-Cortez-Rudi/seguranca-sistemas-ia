@@ -18,7 +18,7 @@ export function MfaForm({ next }: { next: string }) {
         <Field key="totp" label="Código do aplicativo autenticador" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" required maxLength={6} />
       )}
       <SubmitButton>Verificar</SubmitButton>
-      <button type="button" onClick={() => setRecovery(!recovery)} className="text-sm text-indigo-600 hover:underline">
+      <button type="button" onClick={() => setRecovery(!recovery)} className="link cursor-pointer text-sm">
         {recovery ? "Usar o código do aplicativo" : "Usar um código de recuperação"}
       </button>
     </form>

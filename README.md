@@ -131,7 +131,9 @@ e-mails continuam apontando para a porta antiga.
 |---|---|
 | `npm run dev` | aplicação em modo desenvolvimento |
 | `npm run build` e depois `npm start` | aplicação em modo produção (CSP mais rígida) |
-| `npm test` | 111 testes Vitest; precisa do Docker rodando |
+| `npm test` | os 138 testes Vitest (unitários + funcionais); precisa do Docker rodando |
+| `npm run test:unit` | só os testes unitários (`tests/unit`): regras puras, sem banco nem Docker |
+| `npm run test:functional` | só os testes funcionais (`tests/functional`): fluxos completos contra o banco de teste |
 | `npm run lint` | ESLint, com regras que proíbem `dangerouslySetInnerHTML`, `$queryRawUnsafe` e `eval` |
 | `npm run typecheck` | TypeScript strict |
 | `npm run audit` | `npm audit` das dependências de produção |
@@ -197,5 +199,8 @@ middleware.ts        CSP com nonce, CSRF de API, sessão e perfil por rota
 server.mjs           servidor HTTP que protege o IP usado no limite de tentativas
 prisma/              schema, migrations e seed
 scripts/             gerador do .env e script de criação do banco de testes
-tests/               testes Vitest
+tests/
+  unit/              testes unitários: funções puras de lib/ (validadores, cifra, CSP, política de senha, frete)
+  functional/        testes funcionais: fluxos completos nos serviços com o banco de teste (login, checkout, IDOR)
+  helpers/           limpeza do banco e fábrica de usuários dos testes funcionais
 ```

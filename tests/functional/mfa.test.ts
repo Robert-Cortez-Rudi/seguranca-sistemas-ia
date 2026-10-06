@@ -4,8 +4,8 @@ import { db } from "@/lib/db";
 import { LOGIN_ERROR, login } from "@/lib/services/auth";
 import { confirmEnrollment, disableMfa, MFA_ERROR, MFA_EXPIRED_ERROR, startEnrollment, verifyMfaLogin } from "@/lib/services/mfa";
 import { validateSessionToken } from "@/lib/session";
-import { resetDb } from "./helpers/db";
-import { createUser, ctx, PASSWORD } from "./helpers/factory";
+import { resetDb } from "../helpers/db";
+import { createUser, ctx, PASSWORD } from "../helpers/factory";
 
 beforeEach(resetDb);
 

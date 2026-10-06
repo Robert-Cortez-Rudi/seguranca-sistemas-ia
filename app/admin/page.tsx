@@ -3,6 +3,10 @@ import { requireUser } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { listAuditLogs } from "@/lib/services/admin";
 
+// Cor do selo conforme a gravidade do evento.
+const actionBadge = (action: string) =>
+  /FAIL|LOCKOUT|DENIED/.test(action) ? "bg-coral" : /OK|CREATED/.test(action) ? "bg-mint" : "bg-paper";
+
 // A09 — AuditLog, visível só para ADMIN. Metadata já chega sem dados sensíveis (lib/audit.ts).
 export default async function AdminPage({
   searchParams,
@@ -18,45 +22,45 @@ export default async function AdminPage({
   const qs = (p: number) => `/admin?${new URLSearchParams({ ...(action ? { acao: action } : {}), pagina: String(p) })}`;
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Auditoria</h1>
-        <Link href="/admin/usuarios" className="text-sm text-indigo-600 hover:underline">Gerenciar usuários</Link>
+    <main className="mx-auto max-w-6xl space-y-7 px-4 py-10">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="page-title">Auditoria</h1>
+        <Link href="/admin/usuarios" className="btn btn-sun">Gerenciar usuários</Link>
       </div>
-      <form className="flex items-center gap-2 text-sm">
-        <label htmlFor="acao">Ação</label>
-        <select id="acao" name="acao" defaultValue={action ?? ""} className="rounded-md border border-slate-300 px-2 py-1">
+      <form className="flex flex-wrap items-center gap-3 text-sm">
+        <label htmlFor="acao" className="label">Ação</label>
+        <select id="acao" name="acao" defaultValue={action ?? ""} className="input w-auto py-1.5">
           <option value="">Todas</option>
           {actions.map((a) => (
             <option key={a}>{a}</option>
           ))}
         </select>
-        <button className="rounded-md bg-slate-200 px-3 py-1">Filtrar</button>
-        <span className="ml-auto text-slate-500">{total} eventos</span>
+        <button className="btn btn-sm">Filtrar</button>
+        <span className="badge ml-auto bg-cobalt text-white">{total} eventos</span>
       </form>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] rounded-lg bg-white text-xs shadow-sm">
-          <thead className="text-left text-slate-500">
-            <tr><th className="p-2">Data</th><th className="p-2">Ação</th><th className="p-2">Usuário</th><th className="p-2">IP</th><th className="p-2">Detalhes</th><th className="p-2">User agent</th></tr>
+      <div className="table-wrap">
+        <table className="table-pop min-w-[720px] text-xs">
+          <thead>
+            <tr><th>Data</th><th>Ação</th><th>Usuário</th><th>IP</th><th>Detalhes</th><th>User agent</th></tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-t align-top">
-                <td className="whitespace-nowrap p-2">{formatDate(r.createdAt)}</td>
-                <td className="p-2 font-mono">{r.action}</td>
-                <td className="p-2">{r.user?.email ?? "—"}</td>
-                <td className="p-2 font-mono">{r.ip}</td>
-                <td className="p-2 font-mono">{r.metadata ? JSON.stringify(r.metadata) : ""}</td>
-                <td className="max-w-[16rem] truncate p-2 text-slate-500" title={r.userAgent ?? ""}>{r.userAgent}</td>
+              <tr key={r.id}>
+                <td className="whitespace-nowrap">{formatDate(r.createdAt)}</td>
+                <td><span className={`badge font-mono ${actionBadge(r.action)}`}>{r.action}</span></td>
+                <td>{r.user?.email ?? "—"}</td>
+                <td className="font-mono">{r.ip}</td>
+                <td className="font-mono">{r.metadata ? JSON.stringify(r.metadata) : ""}</td>
+                <td className="max-w-[16rem] truncate text-muted" title={r.userAgent ?? ""}>{r.userAgent}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <nav className="flex justify-between text-sm">
-        {page > 1 ? <Link href={qs(page - 1)} className="text-indigo-600">← Anterior</Link> : <span />}
-        <span>Página {page} de {pages}</span>
-        {page < pages ? <Link href={qs(page + 1)} className="text-indigo-600">Próxima →</Link> : <span />}
+      <nav className="flex items-center justify-between text-sm" aria-label="Paginação">
+        {page > 1 ? <Link href={qs(page - 1)} className="btn btn-sm">← Anterior</Link> : <span />}
+        <span className="font-bold">Página {page} de {pages}</span>
+        {page < pages ? <Link href={qs(page + 1)} className="btn btn-sm">Próxima →</Link> : <span />}
       </nav>
     </main>
   );

@@ -2,13 +2,12 @@ import { randomBytes } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { encrypt } from "@/lib/crypto";
 import { db } from "@/lib/db";
-import { canTransition } from "@/lib/shipment";
 import { listUsers, updateUser } from "@/lib/services/admin";
 import { login, LOGIN_ERROR } from "@/lib/services/auth";
 import { processPaymentWebhook, signWebhook } from "@/lib/services/payment";
 import { getSellerProduct, listSellerShipments, updateProduct, updateShipmentStatus } from "@/lib/services/seller";
-import { resetDb } from "./helpers/db";
-import { createUser, ctx, PASSWORD } from "./helpers/factory";
+import { resetDb } from "../helpers/db";
+import { createUser, ctx, PASSWORD } from "../helpers/factory";
 
 beforeEach(resetDb);
 
@@ -131,15 +130,6 @@ describe("vendedor (A01/A06)", () => {
     const shipment1 = await db.shipment.findFirstOrThrow({ where: { orderId: data.order.id, sellerId: data.s1.id } });
     return { ...data, shipment1 };
   }
-
-  it("transições: só o próximo passo", () => {
-    expect(canTransition("PAGO", "SEPARANDO")).toBe(true);
-    expect(canTransition("SEPARANDO", "ENVIADO")).toBe(true);
-    expect(canTransition("ENVIADO", "ENTREGUE")).toBe(true);
-    expect(canTransition("PAGO", "ENTREGUE")).toBe(false);
-    expect(canTransition("ENVIADO", "PAGO")).toBe(false);
-    expect(canTransition("ENTREGUE", "ENTREGUE")).toBe(false);
-  });
 
   it("atualiza a própria entrega seguindo o fluxo; enviar exige rastreio", async () => {
     const { s1, shipment1 } = await paid();

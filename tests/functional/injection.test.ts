@@ -1,14 +1,13 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
-import { isCrossSiteApiRequest } from "@/lib/origin";
 import { login, LOGIN_ERROR, register } from "@/lib/services/auth";
 import { addToCart } from "@/lib/services/cart";
 import { getProduct } from "@/lib/services/catalog";
 import { requestPasswordReset, RESET_REQUEST_MESSAGE } from "@/lib/services/password";
 import { createProduct } from "@/lib/services/seller";
 import { generateCpf } from "@/lib/validators";
-import { resetDb } from "./helpers/db";
-import { createUser, ctx } from "./helpers/factory";
+import { resetDb } from "../helpers/db";
+import { createUser, ctx } from "../helpers/factory";
 
 beforeEach(resetDb);
 
@@ -56,20 +55,5 @@ describe("XSS (A05)", () => {
       ctx(),
     );
     expect(res.ok).toBe(false);
-  });
-});
-
-describe("CSRF em rotas de API (A01/A02)", () => {
-  const base = { pathname: "/api/qualquer", appUrl: "http://localhost:3000", referer: null };
-  it("POST de outra origem ou sem origem é bloqueado", () => {
-    expect(isCrossSiteApiRequest({ ...base, method: "POST", origin: "https://evil.example" })).toBe(true);
-    expect(isCrossSiteApiRequest({ ...base, method: "POST", origin: null })).toBe(true);
-  });
-  it("POST da própria origem passa; GET não é afetado", () => {
-    expect(isCrossSiteApiRequest({ ...base, method: "POST", origin: "http://localhost:3000" })).toBe(false);
-    expect(isCrossSiteApiRequest({ ...base, method: "GET", origin: "https://evil.example" })).toBe(false);
-  });
-  it("webhook é isento (autenticado por HMAC)", () => {
-    expect(isCrossSiteApiRequest({ ...base, pathname: "/api/webhooks/pagamento", method: "POST", origin: null })).toBe(false);
   });
 });

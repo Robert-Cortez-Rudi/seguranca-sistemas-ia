@@ -25,10 +25,10 @@ export function MfaSetup({ enabled, remainingCodes }: { enabled: boolean; remain
     return (
       <div className="space-y-3">
         <FormMessage success="Verificação em duas etapas ativada." />
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-muted">
           Guarde estes códigos de recuperação num lugar seguro. Cada um funciona uma vez e eles <strong>não serão mostrados de novo</strong>.
         </p>
-        <ul className="grid grid-cols-2 gap-2 rounded-md bg-slate-100 p-4 font-mono text-sm">
+        <ul className="stagger grid grid-cols-2 gap-2 rounded-xl border-[2.5px] border-dashed border-ink bg-sun p-4 font-mono text-sm font-semibold">
           {state.recoveryCodes.map((c) => (
             <li key={c}>{c}</li>
           ))}
@@ -41,11 +41,11 @@ export function MfaSetup({ enabled, remainingCodes }: { enabled: boolean; remain
     return (
       <form action={action} className="space-y-4">
         <FormMessage error={state.error} />
-        <p className="text-sm text-slate-700">Escaneie o QR code no seu aplicativo autenticador e digite o código gerado.</p>
+        <p className="text-sm text-muted">Escaneie o QR code no seu aplicativo autenticador e digite o código gerado.</p>
         {/* data: URL gerada no servidor; a CSP libera img-src data: */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={state.qrDataUrl} alt="QR code para o aplicativo autenticador" width={220} height={220} />
-        <p className="text-xs text-slate-500">
+        <img src={state.qrDataUrl} alt="QR code para o aplicativo autenticador" width={220} height={220} className="rounded-xl border-[2.5px] border-ink bg-white p-2 shadow-hard-sm" />
+        <p className="text-xs text-muted">
           Sem câmera? Digite a chave: <code className="break-all">{state.secret}</code>
         </p>
         <input type="hidden" name="intent" value="confirm" />
@@ -59,11 +59,11 @@ export function MfaSetup({ enabled, remainingCodes }: { enabled: boolean; remain
     return (
       <form action={action} className="space-y-4">
         <FormMessage error={state.error} />
-        <p className="text-sm text-emerald-700">Ativa. Códigos de recuperação restantes: {remainingCodes}.</p>
+        <p className="notice notice-success">Ativa. Códigos de recuperação restantes: {remainingCodes}.</p>
         <input type="hidden" name="intent" value="disable" />
         <Field id="mfa-password" label="Senha atual" name="password" type="password" autoComplete="current-password" required maxLength={128} />
         <Field id="mfa-disable-code" label="Código do aplicativo" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" required maxLength={6} />
-        <SubmitButton className="bg-red-600 hover:bg-red-700">Desativar 2FA</SubmitButton>
+        <SubmitButton className="btn-danger">Desativar 2FA</SubmitButton>
       </form>
     );
   }
@@ -71,7 +71,7 @@ export function MfaSetup({ enabled, remainingCodes }: { enabled: boolean; remain
   return (
     <form action={action} className="space-y-4">
       <FormMessage error={state.error} success={state.success} />
-      <p className="text-sm text-slate-700">Proteja sua conta com um código do aplicativo autenticador além da senha.</p>
+      <p className="text-sm text-muted">Proteja sua conta com um código do aplicativo autenticador além da senha.</p>
       <input type="hidden" name="intent" value="start" />
       <SubmitButton>Configurar 2FA</SubmitButton>
     </form>

@@ -14,22 +14,26 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 py-12">
-      <h1 className="text-2xl font-bold">Pagamento</h1>
-      <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+      <h1 className="page-title">Pagamento</h1>
+      <p className="notice notice-warn">
         Gateway simulado para fins acadêmicos. Nenhuma cobrança real é feita.
       </p>
-      <p>
-        Total: <strong className="text-xl">{formatMoney(order.totalCents)}</strong> · {order.card}
-      </p>
-      <form action={payAction} className="flex gap-3">
-        <input type="hidden" name="orderId" value={order.id} />
-        <button name="result" value="approve" className="flex-1 rounded-md bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700">
-          Aprovar pagamento
-        </button>
-        <button name="result" value="decline" className="flex-1 rounded-md bg-slate-200 px-4 py-2 font-semibold hover:bg-slate-300">
-          Recusar
-        </button>
-      </form>
+      <div className="card space-y-5 p-6">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">Total</p>
+          <p className="price text-5xl">{formatMoney(order.totalCents)}</p>
+          <p className="mt-2 font-mono text-sm">{order.card}</p>
+        </div>
+        <form action={payAction} className="flex flex-wrap gap-3">
+          <input type="hidden" name="orderId" value={order.id} />
+          <button name="result" value="approve" className="btn btn-mint flex-1">
+            Aprovar pagamento
+          </button>
+          <button name="result" value="decline" className="btn flex-1">
+            Recusar
+          </button>
+        </form>
+      </div>
     </main>
   );
 }

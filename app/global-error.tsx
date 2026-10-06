@@ -8,8 +8,8 @@ export default function GlobalError() {
   return (
     <html lang="pt-BR">
       <body className="px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold">Serviço indisponível</h1>
-        <p className="mt-2">Tente novamente em alguns minutos.</p>
+        <h1 className="page-title">Serviço indisponível</h1>
+        <p className="mt-3 text-muted">Tente novamente em alguns minutos.</p>
       </body>
     </html>
   );
