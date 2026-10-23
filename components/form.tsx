@@ -5,11 +5,19 @@ import { useFormStatus } from "react-dom";
 // Componentes de formulário compartilhados. Todo texto é renderizado pelo React,
 // que escapa HTML (A05).
 
+// Dica da política de senha (A07). A regra é aplicada no servidor por
+// checkPasswordPolicy() em lib/password.ts; mantenha este texto igual a ela.
+export const PASSWORD_HINT =
+  "De 12 a 128 caracteres, com pelo menos 1 letra maiúscula, 1 letra minúscula, 1 número e 1 símbolo " +
+  "(qualquer caractere que não seja letra nem número, como espaço, - , < >). " +
+  "Não use senha comum, um único caractere repetido nem o seu e-mail.";
+
 export function Field({
   label,
   name,
   type = "text",
   errors,
+  hint,
   id: idProp,
   ...rest
 }: {
@@ -17,9 +25,11 @@ export function Field({
   name: string;
   type?: string;
   errors?: string[];
+  hint?: string;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
   // Passe `id` quando a página tiver dois formulários com o mesmo `name`.
   const id = idProp ?? `f-${name}`;
+  const describedBy = [hint ? `${id}-hint` : null, errors?.length ? `${id}-err` : null].filter(Boolean).join(" ");
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="label">
@@ -30,10 +40,15 @@ export function Field({
         name={name}
         type={type}
         aria-invalid={errors?.length ? true : undefined}
-        aria-describedby={errors?.length ? `${id}-err` : undefined}
+        aria-describedby={describedBy || undefined}
         className="input"
         {...rest}
       />
+      {hint ? (
+        <p id={`${id}-hint`} className="text-sm text-muted">
+          {hint}
+        </p>
+      ) : null}
       {errors?.length ? (
         <p id={`${id}-err`} className="field-error">
           {errors[0]}

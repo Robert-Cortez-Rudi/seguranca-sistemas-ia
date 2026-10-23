@@ -45,5 +45,22 @@ export function checkPasswordPolicy(password: string, context: { email?: string;
   if (/^(.)\1+$/.test(password)) return "A senha não pode ser um único caractere repetido.";
   const localPart = context.email?.split("@")[0]?.toLowerCase();
   if (localPart && localPart.length >= 4 && lower.includes(localPart)) return "A senha não pode conter o seu e-mail.";
+  const missing = missingCharacterClasses(password);
+  if (missing.length) return `A senha precisa ter pelo menos ${joinPt(missing)}.`;
   return null;
+}
+
+// Composição: letras e números em Unicode (acentuadas contam como letra); símbolo é
+// qualquer caractere que não seja letra nem número, inclusive espaço.
+function missingCharacterClasses(password: string): string[] {
+  const missing: string[] = [];
+  if (!/\p{N}/u.test(password)) missing.push("1 número");
+  if (!/\p{Lu}/u.test(password)) missing.push("1 letra maiúscula");
+  if (!/\p{Ll}/u.test(password)) missing.push("1 letra minúscula");
+  if (!/[^\p{L}\p{N}]/u.test(password)) missing.push("1 símbolo (qualquer caractere que não seja letra nem número, como espaço, - , < >)");
+  return missing;
+}
+
+function joinPt(items: string[]): string {
+  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} e ${items[items.length - 1]}`;
 }

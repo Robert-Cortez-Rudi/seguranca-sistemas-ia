@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Field, FormMessage, SubmitButton } from "@/components/form";
+import { Field, FormMessage, PASSWORD_HINT, SubmitButton } from "@/components/form";
 import { registerAction } from "../actions";
 
 export function RegisterForm() {
@@ -24,6 +24,7 @@ export function RegisterForm() {
         minLength={12}
         maxLength={128}
         errors={fe?.password}
+        hint={PASSWORD_HINT}
       />
       <Field
         label="Confirme a senha"

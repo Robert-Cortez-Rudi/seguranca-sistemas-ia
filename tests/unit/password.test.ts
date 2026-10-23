@@ -26,6 +26,38 @@ describe("política de senha (A07)", () => {
     expect(checkPasswordPolicy("fulano.silva-2026", { email: "Fulano.Silva@teste.local" })).toMatch(/e-mail/);
     expect(checkPasswordPolicy("Senha-Bem-Forte-123", { email: "fulano.silva@teste.local" })).toBeNull();
   });
+
+  describe("composição", () => {
+    it("rejeita senha sem número", () => {
+      expect(checkPasswordPolicy("Senha-Sem-Numero")).toBe("A senha precisa ter pelo menos 1 número.");
+    });
+
+    it("rejeita senha sem letra maiúscula", () => {
+      expect(checkPasswordPolicy("senha-sem-maiuscula-7")).toBe("A senha precisa ter pelo menos 1 letra maiúscula.");
+    });
+
+    it("rejeita senha sem letra minúscula", () => {
+      expect(checkPasswordPolicy("SENHA-SEM-MINUSCULA-7")).toBe("A senha precisa ter pelo menos 1 letra minúscula.");
+    });
+
+    it("rejeita senha sem símbolo", () => {
+      expect(checkPasswordPolicy("SenhaSemSimbolo7")).toMatch(/^A senha precisa ter pelo menos 1 símbolo/);
+    });
+
+    it("lista tudo o que falta numa mensagem só", () => {
+      expect(checkPasswordPolicy("senhasomenteminuscula")).toMatch(
+        /^A senha precisa ter pelo menos 1 número, 1 letra maiúscula e 1 símbolo/,
+      );
+    });
+
+    it("aceita espaço como símbolo", () => {
+      expect(checkPasswordPolicy("Minha senha forte 7")).toBeNull();
+    });
+
+    it.each(["-", ",", "<", ">"])("aceita %s como símbolo", (s) => {
+      expect(checkPasswordPolicy(`MinhaSenhaForte7${s}`)).toBeNull();
+    });
+  });
 });
 
 describe("hash de senha (A07)", () => {

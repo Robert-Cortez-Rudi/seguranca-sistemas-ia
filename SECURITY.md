@@ -99,7 +99,9 @@ no servidor a cada requisição, o que custa desempenho em troca de nunca precis
 | Controle | Onde | Evidência |
 |---|---|---|
 | Argon2id, `m=19456, t=2, p=1` | [lib/password.ts](lib/password.ts) | teste confere o prefixo `$argon2id$v=19$m=19456,t=2,p=1$` |
-| Senha de 12 a 128 caracteres, sem senha comum, sem repetir um caractere, sem conter o e-mail | [lib/password.ts](lib/password.ts), [lib/common-passwords.ts](lib/common-passwords.ts) | [tests/functional/auth.test.ts](tests/functional/auth.test.ts) |
+| Senha de 12 a 128 caracteres, sem senha comum, sem repetir um caractere, sem conter o e-mail | [lib/password.ts](lib/password.ts), [lib/common-passwords.ts](lib/common-passwords.ts) | [tests/functional/auth.test.ts](tests/functional/auth.test.ts), [tests/unit/password.test.ts](tests/unit/password.test.ts) |
+| Composição: pelo menos 1 número, 1 letra maiúscula, 1 letra minúscula e 1 símbolo (qualquer caractere que não seja letra nem número, inclusive espaço, `-`, `,`, `<`, `>`). A mensagem de erro diz exatamente o que falta | [lib/password.ts](lib/password.ts) | [tests/unit/password.test.ts](tests/unit/password.test.ts): rejeita sem número, sem maiúscula, sem minúscula e sem símbolo; aceita espaço e `- , < >` |
+| A regra completa aparece como dica nos formulários de cadastro, redefinição e troca de senha | [components/form.tsx](components/form.tsx) (`PASSWORD_HINT`) | navegador |
 | Mensagem única "E-mail ou senha inválidos." para e-mail inexistente, senha errada, conta bloqueada e conta desativada | [lib/services/auth.ts](lib/services/auth.ts) | idem |
 | E-mail inexistente também passa por um Argon2 (hash descartável), para não vazar por tempo de resposta | [lib/services/auth.ts](lib/services/auth.ts) | — |
 | Bloqueio de 15 min após 5 falhas; a 6ª tentativa é recusada mesmo com a senha certa | [lib/services/auth.ts](lib/services/auth.ts) | teste "brute force…" |
@@ -110,6 +112,14 @@ no servidor a cada requisição, o que custa desempenho em troca de nunca precis
 | Sessão: token de 32 bytes (`crypto.randomBytes`), SHA-256 no banco, expira em 8h, apagada se expirada ou se o usuário for desativado | [lib/session.ts](lib/session.ts) | [tests/functional/auth.test.ts](tests/functional/auth.test.ts) |
 | Cookie `__Host-ss_session`: `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/` | [lib/auth.ts](lib/auth.ts) | navegador confirmou os atributos e que `document.cookie` não o enxerga |
 | Sessão regenerada no login e na troca de senha | [app/(auth)/actions.ts](app/(auth)/actions.ts), [lib/services/password.ts](lib/services/password.ts) | teste "troca de senha logado" |
+
+**Por que o mínimo é 12, e não os 8 da planilha:** o comprimento é o que mais pesa contra
+ataque de força bruta offline. Se o banco vazar, cada caractere a mais multiplica o número de
+tentativas que o atacante precisa fazer contra o Argon2id. A regra de composição sozinha
+acrescenta pouco a uma senha curta, porque as pessoas tendem a cumpri-la com padrões previsíveis
+(`Senha@1`). Por isso o mínimo de 12 é mais rígido que os 8 da planilha, e a composição entra
+como camada extra, junto com a lista de senhas comuns. O máximo de 128 limita o custo do hash
+contra negação de serviço.
 
 **Problema achado durante a implementação:** o Next só preenche `X-Forwarded-For` quando ele
 chega vazio (`base-server.js`, operador `??=`). Sem o `server.mjs`, um script trocaria esse
