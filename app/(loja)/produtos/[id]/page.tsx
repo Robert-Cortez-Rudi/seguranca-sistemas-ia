@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { formatMoney, swatchClass } from "@/lib/format";
+import { ProductImage } from "@/components/product-image";
+import { formatMoney } from "@/lib/format";
 import { MAX_ITEM_QUANTITY } from "@/lib/schemas";
 import { getProduct } from "@/lib/services/catalog";
 import { AddToCart } from "./add-to-cart";
@@ -14,9 +15,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   return (
     <main className="mx-auto grid max-w-5xl gap-8 px-4 py-10 md:grid-cols-2 md:items-start">
       <div className="card overflow-hidden">
-        <div className={`swatch ${swatchClass(product.id)} aspect-square border-b-0 text-[10rem]`} aria-hidden="true">
-          <span className="float">{product.name.charAt(0).toUpperCase()}</span>
-        </div>
+        <ProductImage src={product.imageUrl} name={product.name} className="aspect-[4/3] text-8xl" />
       </div>
       <div className="space-y-5">
         <Link href="/" className="link text-sm">← Todos os produtos</Link>

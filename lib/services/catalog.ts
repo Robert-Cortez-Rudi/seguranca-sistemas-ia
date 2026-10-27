@@ -9,6 +9,7 @@ const publicProduct = {
   description: true,
   priceCents: true,
   stock: true,
+  imageUrl: true,
   seller: { select: { name: true } },
 } as const;
 

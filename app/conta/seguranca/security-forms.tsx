@@ -28,7 +28,7 @@ export function MfaSetup({ enabled, remainingCodes }: { enabled: boolean; remain
         <p className="text-sm text-muted">
           Guarde estes códigos de recuperação num lugar seguro. Cada um funciona uma vez e eles <strong>não serão mostrados de novo</strong>.
         </p>
-        <ul className="stagger grid grid-cols-2 gap-2 rounded-xl border-[2.5px] border-dashed border-ink bg-sun p-4 font-mono text-sm font-semibold">
+        <ul className="grid grid-cols-2 gap-2 rounded-xl border border-line bg-sun p-4 font-mono text-sm font-semibold">
           {state.recoveryCodes.map((c) => (
             <li key={c}>{c}</li>
           ))}
@@ -44,7 +44,7 @@ export function MfaSetup({ enabled, remainingCodes }: { enabled: boolean; remain
         <p className="text-sm text-muted">Escaneie o QR code no seu aplicativo autenticador e digite o código gerado.</p>
         {/* data: URL gerada no servidor; a CSP libera img-src data: */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={state.qrDataUrl} alt="QR code para o aplicativo autenticador" width={220} height={220} className="rounded-xl border-[2.5px] border-ink bg-white p-2 shadow-hard-sm" />
+        <img src={state.qrDataUrl} alt="QR code para o aplicativo autenticador" width={220} height={220} className="rounded-xl border border-line bg-white p-2" />
         <p className="text-xs text-muted">
           Sem câmera? Digite a chave: <code className="break-all">{state.secret}</code>
         </p>

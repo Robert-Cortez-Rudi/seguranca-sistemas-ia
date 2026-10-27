@@ -17,7 +17,7 @@ export async function getCart(userId: string) {
       items: {
         select: {
           quantity: true,
-          product: { select: { id: true, name: true, priceCents: true, stock: true, active: true } },
+          product: { select: { id: true, name: true, priceCents: true, stock: true, active: true, imageUrl: true } },
         },
         orderBy: { productId: "asc" },
       },
@@ -26,6 +26,7 @@ export async function getCart(userId: string) {
   const items = (cart?.items ?? []).map((i) => ({
     productId: i.product.id,
     name: i.product.name,
+    imageUrl: i.product.imageUrl,
     unitPriceCents: i.product.priceCents,
     quantity: i.quantity,
     available: i.product.active && i.product.stock >= i.quantity,

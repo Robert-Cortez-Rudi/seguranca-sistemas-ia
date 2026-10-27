@@ -10,7 +10,7 @@ export default async function OrdersPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-7 px-4 py-10">
       <h1 className="page-title">Meus pedidos</h1>
-      <ul className="stagger space-y-4">
+      <ul className="space-y-4">
         {orders.map((o) => (
           <li key={o.id}>
             <Link href={`/conta/pedidos/${o.id}`} className="card card-hover flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
@@ -28,7 +28,7 @@ export default async function OrdersPage() {
         ))}
         {orders.length === 0 && (
           <li className="card space-y-4 p-8 text-center">
-            <p className="font-display text-xl font-extrabold">Você ainda não fez pedidos.</p>
+            <p className="font-display text-xl font-semibold">Você ainda não fez pedidos.</p>
             <Link href="/" className="btn btn-primary">Ver produtos</Link>
           </li>
         )}

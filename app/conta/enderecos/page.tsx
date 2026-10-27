@@ -10,7 +10,7 @@ export default async function AddressesPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-8 px-4 py-10">
       <h1 className="page-title">Endereços</h1>
-      <ul className="stagger space-y-4">
+      <ul className="space-y-4">
         {addresses.map((a) => (
           <li key={a.id} className="card flex items-start justify-between gap-4 p-5 text-sm">
             <div className="space-y-1">

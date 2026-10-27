@@ -30,12 +30,12 @@ export default async function AccountPage() {
     <main className="mx-auto max-w-2xl space-y-7 px-4 py-10">
       <h1 className="page-title">Minha conta</h1>
       <section className="card overflow-hidden">
-        <div className="flex items-center gap-4 border-b-[2.5px] border-ink bg-cobalt p-5 text-white">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-[2.5px] border-ink bg-sun font-display text-2xl font-extrabold text-ink" aria-hidden="true">
+        <div className="flex items-center gap-4 border-b border-line p-5">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-line bg-sun font-display text-2xl font-semibold text-ink" aria-hidden="true">
             {row.name.charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="truncate font-display text-xl font-extrabold leading-tight">{row.name}</p>
+            <p className="truncate font-display text-xl font-semibold leading-tight">{row.name}</p>
             <p className="truncate text-sm opacity-90">{row.email}</p>
           </div>
         </div>
@@ -50,11 +50,11 @@ export default async function AccountPage() {
           </dd>
         </dl>
       </section>
-      <nav className="stagger grid gap-5 sm:grid-cols-2" aria-label="Seções da conta">
+      <nav className="grid gap-5 sm:grid-cols-2" aria-label="Seções da conta">
         {links.map((l) => (
           <Link key={l.href} href={l.href} className={`card card-hover flex items-center justify-between gap-3 p-5 ${l.color}`}>
             <span>
-              <span className="block font-display text-lg font-extrabold leading-tight">{l.label}</span>
+              <span className="block font-display text-lg font-semibold leading-tight">{l.label}</span>
               <span className="text-sm font-medium">{l.hint}</span>
             </span>
             <span className="arrow text-xl" aria-hidden="true">→</span>

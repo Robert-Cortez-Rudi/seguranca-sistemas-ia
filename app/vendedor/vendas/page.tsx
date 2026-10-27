@@ -17,13 +17,13 @@ export default async function SalesPage() {
         <h1 className="page-title">Minhas vendas</h1>
       </div>
       {shipments.length === 0 && <p className="card p-6 text-muted">Nenhuma venda paga ainda.</p>}
-      <ul className="stagger space-y-5">
+      <ul className="space-y-5">
         {shipments.map((s) => {
           const next = nextShipmentStatus(s.status);
           return (
             <li key={s.id} className="card space-y-4 p-5 text-sm">
               <p className="flex flex-wrap items-baseline justify-between gap-2">
-                <strong className="font-display text-base font-extrabold">{s.order.user.name}</strong>
+                <strong className="font-display text-base font-semibold">{s.order.user.name}</strong>
                 <span className="text-muted">Pedido de {formatDate(s.order.createdAt)}</span>
               </p>
               <ShipmentSteps status={s.status} />

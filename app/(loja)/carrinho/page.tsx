@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { formatMoney, swatchClass } from "@/lib/format";
+import { ProductImage } from "@/components/product-image";
+import { formatMoney } from "@/lib/format";
 import { MAX_ITEM_QUANTITY } from "@/lib/schemas";
 import { getCart } from "@/lib/services/cart";
 import { updateCartAction } from "../actions";
@@ -16,21 +17,19 @@ export default async function CartPage() {
       <h1 className="page-title">Carrinho</h1>
       {cart.items.length === 0 ? (
         <div className="card space-y-4 p-8 text-center">
-          <p className="font-display text-xl font-extrabold">Seu carrinho está vazio.</p>
+          <p className="font-display text-xl font-semibold">Seu carrinho está vazio.</p>
           <Link href="/" className="btn btn-primary">
             Ver produtos <span className="arrow" aria-hidden="true">→</span>
           </Link>
         </div>
       ) : (
         <>
-          <ul className="stagger space-y-4">
+          <ul className="space-y-4">
             {cart.items.map((i) => (
               <li key={i.productId} className="card flex flex-wrap items-center gap-4 p-4 text-sm">
-                <div className={`swatch ${swatchClass(i.productId)} h-14 w-14 shrink-0 rounded-xl border-[2.5px] border-ink text-2xl`} aria-hidden="true">
-                  <span>{i.name.charAt(0).toUpperCase()}</span>
-                </div>
+                <ProductImage src={i.imageUrl} name={i.name} className="h-16 w-20 shrink-0 rounded-md border border-line text-2xl" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-display text-base font-extrabold leading-tight">{i.name}</p>
+                  <p className="font-display text-base font-semibold leading-tight">{i.name}</p>
                   <p className="text-muted">{formatMoney(i.unitPriceCents)} cada</p>
                   {!i.available && <p className="field-error">Indisponível na quantidade escolhida</p>}
                 </div>

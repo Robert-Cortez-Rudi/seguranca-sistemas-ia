@@ -10,12 +10,12 @@ export default async function CardsPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-8 px-4 py-10">
       <h1 className="page-title">Cartões</h1>
-      <ul className="stagger grid gap-5 sm:grid-cols-2">
+      <ul className="grid gap-5 sm:grid-cols-2">
         {cards.map((c) => (
-          <li key={c.id} className="card flex aspect-[1.7] flex-col justify-between bg-cobalt p-5 text-white">
+          <li key={c.id} className="card flex aspect-[1.7] flex-col justify-between p-5">
             <div className="flex items-start justify-between gap-2">
-              <span className="font-display text-lg font-extrabold uppercase">{c.brand}</span>
-              <span className="h-7 w-10 rounded-md border-[2.5px] border-ink bg-sun" aria-hidden="true" />
+              <span className="font-display text-lg font-semibold uppercase">{c.brand}</span>
+              <span className="h-7 w-10 rounded-md border border-line bg-sun" aria-hidden="true" />
             </div>
             <span className="font-mono text-lg tracking-widest">{c.label}</span>
             <div className="flex items-end justify-between gap-2 text-sm">

@@ -36,7 +36,7 @@ export default async function AdminPage({
           ))}
         </select>
         <button className="btn btn-sm">Filtrar</button>
-        <span className="badge ml-auto bg-cobalt text-white">{total} eventos</span>
+        <span className="badge ml-auto">{total} eventos</span>
       </form>
       <div className="table-wrap">
         <table className="table-pop min-w-[720px] text-xs">

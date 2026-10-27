@@ -19,16 +19,16 @@ const USERS: { email: string; name: string; role: Role; password: string }[] = [
   { email: "cliente3@secureshop.local", name: "Fábio Cliente", role: "CUSTOMER", password: "Cliente3-Seed-2026!" },
 ];
 
-const PRODUCTS: Record<string, { name: string; description: string; priceCents: number; stock: number }[]> = {
+const PRODUCTS: Record<string, { name: string; description: string; priceCents: number; stock: number; imageUrl: string }[]> = {
   "vendedor1@secureshop.local": [
-    { name: "Fone Bluetooth", description: "Fone sem fio com cancelamento de ruído.", priceCents: 19990, stock: 25 },
-    { name: "Teclado Mecânico", description: "Switches marrons, layout ABNT2.", priceCents: 34900, stock: 10 },
-    { name: "Mouse Sem Fio", description: "Sensor óptico de 16000 DPI.", priceCents: 12950, stock: 40 },
+    { name: "Fone Bluetooth", description: "Fone sem fio com cancelamento de ruído.", priceCents: 19990, stock: 25, imageUrl: "/produtos/fone-bluetooth.jpg" },
+    { name: "Teclado Mecânico", description: "Switches marrons, layout ABNT2.", priceCents: 34900, stock: 10, imageUrl: "/produtos/teclado-mecanico.jpg" },
+    { name: "Mouse Sem Fio", description: "Sensor óptico de 16000 DPI.", priceCents: 12950, stock: 40, imageUrl: "/produtos/mouse-sem-fio.jpg" },
   ],
   "vendedor2@secureshop.local": [
-    { name: "Garrafa Térmica 1L", description: "Mantém a temperatura por 24h.", priceCents: 8990, stock: 60 },
-    { name: "Mochila Notebook", description: "Compartimento acolchoado para 15,6\".", priceCents: 15900, stock: 15 },
-    { name: "Caderno Pontilhado", description: "A5, 160 páginas.", priceCents: 3990, stock: 100 },
+    { name: "Garrafa Térmica 1L", description: "Mantém a temperatura por 24h.", priceCents: 8990, stock: 60, imageUrl: "/produtos/garrafa-termica.jpg" },
+    { name: "Mochila Notebook", description: "Compartimento acolchoado para 15,6\".", priceCents: 15900, stock: 15, imageUrl: "/produtos/mochila-notebook.jpg" },
+    { name: "Caderno Pontilhado", description: "A5, 160 páginas.", priceCents: 3990, stock: 100, imageUrl: "/produtos/caderno-pontilhado.jpg" },
   ],
 };
 

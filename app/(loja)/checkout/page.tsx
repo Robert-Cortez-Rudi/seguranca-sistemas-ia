@@ -28,7 +28,7 @@ export default async function CheckoutPage() {
             <span className="tabular-nums">{formatMoney(i.lineCents)}</span>
           </li>
         ))}
-        <li className="mt-2 flex justify-between border-t-2 border-dashed border-ink/25 pt-3 text-muted">
+        <li className="mt-2 flex justify-between border-t border-line pt-3 text-muted">
           <span>Frete (prévia)</span>
           <span className="tabular-nums">{formatMoney(preview.shippingCents)}</span>
         </li>

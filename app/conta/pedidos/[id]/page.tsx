@@ -33,7 +33,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             ))}
           </tbody>
         </table>
-        <dl className="mt-3 grid grid-cols-2 gap-1 border-t-2 border-dashed border-ink/25 pt-3">
+        <dl className="mt-3 grid grid-cols-2 gap-1 border-t border-line pt-3">
           <dt className="text-muted">Subtotal</dt>
           <dd className="text-right tabular-nums">{formatMoney(order.subtotalCents)}</dd>
           <dt className="text-muted">Frete ({order.shippingUf})</dt>
@@ -47,7 +47,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         <p className="text-sm">
           {order.address.recipient} — {order.address.street}, {order.address.number} — {order.address.city}/{order.shippingUf}
         </p>
-        <ul className="stagger space-y-4">
+        <ul className="space-y-4">
           {order.shipments.map((s, idx) => (
             <li key={idx} className="card space-y-4 p-5 text-sm">
               <p className="flex flex-wrap items-center justify-between gap-2">
