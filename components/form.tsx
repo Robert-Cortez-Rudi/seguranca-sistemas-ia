@@ -45,7 +45,7 @@ export function Field({
         {...rest}
       />
       {hint ? (
-        <p id={`${id}-hint`} className="text-sm text-muted">
+        <p id={`${id}-hint`} className="text-xs leading-relaxed text-muted">
           {hint}
         </p>
       ) : null}
@@ -61,7 +61,7 @@ export function Field({
 export function SubmitButton({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className={`btn btn-primary w-full ${className}`}>
+    <button type="submit" disabled={pending} className={`btn btn-primary btn-lg w-full ${className}`}>
       {pending ? "Aguarde…" : children}
     </button>
   );

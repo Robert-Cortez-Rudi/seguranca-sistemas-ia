@@ -32,6 +32,8 @@ vulnerabilidades, lint e typecheck limpos.
 | Admin não altera a própria conta (evita se trancar para fora); desativar ou mudar perfil derruba as sessões do alvo | [lib/services/admin.ts](lib/services/admin.ts) | [tests/functional/payment-seller-admin.test.ts](tests/functional/payment-seller-admin.test.ts) |
 | CSRF: Server Actions só aceitam POST com Origin igual ao Host (checagem nativa do Next) + cookie `SameSite=Lax`; rotas `/api/*` que alteram estado exigem `Origin` igual a `APP_URL` | [lib/origin.ts](lib/origin.ts), [middleware.ts](middleware.ts) | [tests/unit/origin.test.ts](tests/unit/origin.test.ts) — "CSRF em rotas de API" |
 | Redirecionamento pós-login só para caminho interno (bloqueia `//evil.example`) | [lib/auth.ts](lib/auth.ts) | navegador |
+| Monitor `/admin/monitor` (contagens e registros de usuários, pedidos e transações) só para ADMIN: protegido pelo prefixo `/admin` no middleware e por `requireUser(["ADMIN"])` na página; é só leitura, sem Server Action | [app/admin/monitor/page.tsx](app/admin/monitor/page.tsx), [lib/services/monitor.ts](lib/services/monitor.ts) | [tests/unit/route-access.test.ts](tests/unit/route-access.test.ts) (prefixo `/admin`) |
+| Aba e página do monitor (`?aba=`, `?pagina=`) aceitas só de uma lista fixa e num intervalo; valor estranho cai no padrão | [lib/services/monitor.ts](lib/services/monitor.ts) | [tests/functional/monitor.test.ts](tests/functional/monitor.test.ts) — "parâmetros da URL inválidos…" |
 
 ## A02 — Security Misconfiguration
 
@@ -79,6 +81,7 @@ no servidor a cada requisição, o que custa desempenho em troca de nunca precis
 | Lint proíbe `dangerouslySetInnerHTML`, `$queryRawUnsafe`, `$executeRawUnsafe` e `eval` | [eslint.config.mjs](eslint.config.mjs) | `npm run lint` |
 | Texto de vendedores (nome, descrição) exibido só por JSX, que escapa HTML | `app/**` | navegador: `<script>` exibido como texto, nenhum `alert()` |
 | Texto livre sem caracteres de controle | [lib/schemas.ts](lib/schemas.ts) | — |
+| Busca do catálogo (`/?q=`): termo validado com Zod (até 60 caracteres, sem caractere de controle) e passado ao Prisma como `contains`, que é parametrizado. `' OR 1=1--` e `<script>` viram texto procurado, sem efeito | [lib/services/catalog.ts](lib/services/catalog.ts) | [tests/functional/monitor.test.ts](tests/functional/monitor.test.ts) — "payload de injeção é tratado como texto…" |
 | E-mails em texto puro, sem HTML montado com dado do usuário | [lib/mail.ts](lib/mail.ts) | — |
 
 ## A06 — Insecure Design
@@ -159,6 +162,7 @@ quando a senha estava correta, antes do código TOTP. Quem já tivesse a senha p
 | Valor pago precisa ser igual ao total do pedido; o pedido só sai de `PENDING_PAYMENT` uma vez | idem | testes "valor diferente…" e "pedido já pago…" |
 | Corpo limitado a 4 KB; resposta genérica em qualquer recusa, com o motivo só no AuditLog | idem | — |
 | O gateway simulado roda no servidor: o navegador nunca vê o segredo nem monta a assinatura | [lib/services/payment-simulator.ts](lib/services/payment-simulator.ts) | navegador |
+| Cada evento com assinatura válida vira uma linha em `PaymentTransaction` (aprovada, recusada ou rejeitada com o motivo), gravada na **mesma transação** do banco que muda o pedido. Assinatura forjada e replay não geram transação | [lib/services/payment.ts](lib/services/payment.ts) | [tests/functional/monitor.test.ts](tests/functional/monitor.test.ts) |
 
 ## A09 — Security Logging & Alerting Failures
 
@@ -167,6 +171,7 @@ quando a senha estava correta, antes do código TOTP. Quem já tivesse a senha p
 | AuditLog com ação, usuário, IP, user agent e data: `LOGIN_OK`, `LOGIN_FAIL`, `LOCKOUT`, `PASSWORD_RESET`, `ACCESS_DENIED`, `ORDER_CREATED`, além de `RATE_LIMITED`, `ORDER_PAID`, `WEBHOOK_REJECTED`, `SHIPMENT_UPDATED`, `MFA_*`, `USER_UPDATED` | [lib/audit.ts](lib/audit.ts), [prisma/schema.prisma](prisma/schema.prisma) | testes + navegador (tela do admin) |
 | Metadata filtrado: chaves com senha, token, CPF, cartão, código etc. são descartadas; strings cortadas em 200 caracteres | [lib/audit.ts](lib/audit.ts) | teste "nunca grava a senha digitada"; navegador confere a tela do admin sem CPF, cartão ou senha |
 | AuditLog visível só para ADMIN, com filtro por ação e paginação | [app/admin/page.tsx](app/admin/page.tsx) | navegador |
+| Monitor do admin mostra CPF, telefone e cartão **mascarados** (decifrados e mascarados no servidor; se o dado cifrado estiver corrompido, mostra só a máscara). O select explícito não traz hash de senha, segredo TOTP, número do cartão nem endereço | [lib/services/monitor.ts](lib/services/monitor.ts) | [tests/functional/monitor.test.ts](tests/functional/monitor.test.ts) — "lista usuários com CPF e telefone mascarados…", "pedidos e transações mostram só o cartão mascarado" |
 
 ## A10 — Mishandling of Exceptional Conditions
 

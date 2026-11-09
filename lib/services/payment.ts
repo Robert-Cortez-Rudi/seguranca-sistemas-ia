@@ -74,8 +74,19 @@ export async function processPaymentWebhook(
       where: { id: evt.orderId },
       select: { id: true, userId: true, status: true, totalCents: true, items: { select: { productId: true, sellerId: true, quantity: true } } },
     });
+    // Pedido inexistente não gera transação (não há pedido a que ligá-la); fica só no AuditLog.
     if (!order) return "unknown_order" as const;
-    if (order.totalCents !== evt.amountCents) return "amount_mismatch" as const;
+
+    // Registro da transação para o painel /admin/monitor (A09). Sem dado de cartão.
+    const record = (result: "APPROVED" | "DECLINED" | "REJECTED", reason?: string) =>
+      tx.paymentTransaction.create({
+        data: { eventId: evt.eventId, orderId: order.id, gatewayStatus: evt.status, amountCents: evt.amountCents, result, reason },
+      });
+
+    if (order.totalCents !== evt.amountCents) {
+      await record("REJECTED", "amount_mismatch");
+      return "amount_mismatch" as const;
+    }
 
     // Transição só a partir de PENDING_PAYMENT (condicional contra corrida).
     const next = evt.status === "approved" ? "PAID" : "CANCELED";
@@ -83,7 +94,11 @@ export async function processPaymentWebhook(
       where: { id: order.id, status: "PENDING_PAYMENT" },
       data: { status: next, paidAt: next === "PAID" ? new Date() : null },
     });
-    if (moved.count !== 1) return "bad_transition" as const;
+    if (moved.count !== 1) {
+      await record("REJECTED", "bad_transition");
+      return "bad_transition" as const;
+    }
+    await record(next === "PAID" ? "APPROVED" : "DECLINED");
 
     if (next === "PAID") {
       const sellers = [...new Set(order.items.map((i) => i.sellerId))];

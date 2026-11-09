@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { Field, FormMessage, PASSWORD_HINT, SubmitButton } from "@/components/form";
 import { registerAction } from "../actions";
@@ -9,12 +10,14 @@ export function RegisterForm() {
   const fe = state?.fieldErrors;
   const v = state?.values;
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-5">
       <FormMessage error={state?.error} />
       <Field label="Nome completo" name="name" autoComplete="name" required maxLength={100} errors={fe?.name} defaultValue={v?.name} />
       <Field label="E-mail" name="email" type="email" autoComplete="email" required maxLength={254} errors={fe?.email} defaultValue={v?.email} />
-      <Field label="CPF" name="cpf" inputMode="numeric" placeholder="000.000.000-00" required maxLength={14} errors={fe?.cpf} defaultValue={v?.cpf} />
-      <Field label="Telefone" name="phone" type="tel" autoComplete="tel" placeholder="(11) 98765-4321" required maxLength={16} errors={fe?.phone} defaultValue={v?.phone} />
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="CPF" name="cpf" inputMode="numeric" placeholder="000.000.000-00" required maxLength={14} errors={fe?.cpf} defaultValue={v?.cpf} />
+        <Field label="Telefone" name="phone" type="tel" autoComplete="tel" placeholder="(11) 98765-4321" required maxLength={16} errors={fe?.phone} defaultValue={v?.phone} />
+      </div>
       <Field
         label="Senha (mínimo 12 caracteres)"
         name="password"
@@ -36,6 +39,12 @@ export function RegisterForm() {
         errors={fe?.confirmPassword}
       />
       <SubmitButton>Criar conta</SubmitButton>
+      <p className="text-center text-sm text-muted">
+        Já tem conta?{" "}
+        <Link href="/entrar" className="link">
+          Entrar
+        </Link>
+      </p>
     </form>
   );
 }

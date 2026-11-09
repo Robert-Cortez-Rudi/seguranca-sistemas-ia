@@ -11,6 +11,15 @@
 //   --pagamento X    aprovar | recusar | aleatorio | nenhum (padrão aprovar)
 //   --prefixo P      início do e-mail dos clientes (padrão "cliente"); só letras, números, ponto e hífen
 //   --senha S        senha dos clientes criados (padrão SENHA_PADRAO abaixo, documentada no README)
+//   --continuo       repete as rodadas sem parar (Ctrl+C encerra) — para a aula, com o painel
+//                    /admin/monitor aberto acompanhando usuários, pedidos e transações
+//   --intervalo S    segundos entre rodadas no modo contínuo (padrão 5; de 1 a 3600)
+//   --rodadas N      no modo contínuo, para depois de N rodadas (padrão 0 = sem limite)
+//
+// Modo contínuo (atalho: npm run simular):
+//   npm run popular -- --continuo --clientes 2 --compras 1 --pagamento aleatorio --intervalo 5
+//   Em cada rodada cria os clientes, faz as compras e paga pelo webhook. Quando um produto
+//   fica com menos de 3 unidades, o estoque volta para 50, para a simulação não parar.
 //
 // Sai com código 1 se algo falhar, para o Agendador de Tarefas registrar a falha.
 // Nunca imprime senha, CPF ou cartão (A09).
@@ -49,6 +58,9 @@ function lerOpcoes() {
       pagamento: { type: "string", default: "aprovar" },
       prefixo: { type: "string", default: "cliente" },
       senha: { type: "string", default: SENHA_PADRAO },
+      continuo: { type: "boolean", default: false },
+      intervalo: { type: "string", default: "5" },
+      rodadas: { type: "string", default: "0" },
     },
   });
   const clientes = Number(values.clientes);
@@ -59,7 +71,14 @@ function lerOpcoes() {
     throw new Error("--pagamento deve ser aprovar, recusar, aleatorio ou nenhum");
   }
   if (!/^[a-z0-9.-]{1,30}$/.test(values.prefixo)) throw new Error("--prefixo aceita só letras minúsculas, números, ponto e hífen");
-  return { clientes, compras, pagamento: values.pagamento, prefixo: values.prefixo, senha: values.senha };
+  const intervalo = Number(values.intervalo);
+  const rodadas = Number(values.rodadas);
+  if (!Number.isInteger(intervalo) || intervalo < 1 || intervalo > 3600) throw new Error("--intervalo deve ser um inteiro de 1 a 3600 (segundos)");
+  if (!Number.isInteger(rodadas) || rodadas < 0) throw new Error("--rodadas deve ser um inteiro maior ou igual a 0");
+  return {
+    clientes, compras, pagamento: values.pagamento, prefixo: values.prefixo, senha: values.senha,
+    continuo: values.continuo, intervalo, rodadas,
+  };
 }
 
 async function criarCliente(prefixo: string, senha: string): Promise<{ id: string; email: string }> {
@@ -121,16 +140,23 @@ async function comprar(userId: string, pagamento: string): Promise<string> {
   return `pedido ${pedido.orderId} de ${reais(pedido.totalCents)}: ${situacao}`;
 }
 
-async function main() {
-  const opt = lerOpcoes();
-  console.log(`[${new Date().toLocaleString("pt-BR")}] popular: ${opt.clientes} cliente(s), ${opt.compras} compra(s) cada, pagamento=${opt.pagamento}`);
+type Opcoes = ReturnType<typeof lerOpcoes>;
 
+/** Uma rodada: cria os clientes e faz as compras. Devolve quantos pedidos e falhas houve. */
+async function rodada(opt: Opcoes): Promise<{ criados: number; pedidos: number; falhas: number }> {
   const clientes: { id: string; email: string }[] = [];
+  let falhas = 0;
   for (let i = 0; i < opt.clientes; i++) {
-    const c = await criarCliente(opt.prefixo, opt.senha);
-    clientes.push(c);
-    console.log(`  + cliente ${c.email}`);
+    try {
+      const c = await criarCliente(opt.prefixo, opt.senha);
+      clientes.push(c);
+      console.log(`  + cliente ${c.email}`);
+    } catch (err) {
+      falhas++;
+      console.error(`  ! cadastro: ${(err as Error).message}`);
+    }
   }
+  const criados = clientes.length;
   if (opt.clientes === 0) {
     // Sem clientes novos: compra com os que o script criou antes (mesmo prefixo).
     clientes.push(...(await db.user.findMany({
@@ -140,19 +166,76 @@ async function main() {
     if (clientes.length === 0) throw new Error(`nenhum cliente com o prefixo "${opt.prefixo}" encontrado`);
   }
 
-  let falhas = 0;
+  let pedidos = 0;
   for (const c of clientes) {
     for (let i = 0; i < opt.compras; i++) {
       try {
         console.log(`  $ ${c.email}: ${await comprar(c.id, opt.pagamento)}`);
+        pedidos++;
       } catch (err) {
         falhas++;
         console.error(`  ! ${c.email}: ${(err as Error).message}`);
       }
     }
   }
-  console.log(`Concluído: ${opt.clientes} cliente(s) criados, ${clientes.length * opt.compras - falhas} pedido(s), ${falhas} falha(s).`);
-  if (falhas > 0) process.exitCode = 1;
+  return { criados, pedidos, falhas };
+}
+
+/** Modo contínuo: produto com menos de 3 unidades volta a ter 50, para as compras não pararem. */
+async function reporEstoque() {
+  const r = await db.product.updateMany({ where: { active: true, stock: { lt: 3 } }, data: { stock: 50 } });
+  if (r.count > 0) console.log(`  ~ estoque reposto em ${r.count} produto(s)`);
+}
+
+const esperar = (ms: number, sinal: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    const t = setTimeout(resolve, ms);
+    sinal.addEventListener("abort", () => { clearTimeout(t); resolve(); }, { once: true });
+  });
+
+async function main() {
+  const opt = lerOpcoes();
+  const agora = () => new Date().toLocaleString("pt-BR");
+  console.log(
+    `[${agora()}] popular: ${opt.clientes} cliente(s), ${opt.compras} compra(s) cada, pagamento=${opt.pagamento}` +
+      (opt.continuo ? `, contínuo a cada ${opt.intervalo}s${opt.rodadas ? ` por ${opt.rodadas} rodada(s)` : " (Ctrl+C para parar)"}` : ""),
+  );
+
+  if (!opt.continuo) {
+    const r = await rodada(opt);
+    console.log(`Concluído: ${r.criados} cliente(s) criados, ${r.pedidos} pedido(s), ${r.falhas} falha(s).`);
+    if (r.falhas > 0) process.exitCode = 1;
+    return;
+  }
+
+  // Ctrl+C termina a rodada atual e sai limpo, sem deixar conexão aberta no banco.
+  const parar = new AbortController();
+  process.once("SIGINT", () => {
+    console.log("Encerrando depois da rodada atual…");
+    parar.abort();
+  });
+
+  const total = { rodadas: 0, criados: 0, pedidos: 0, falhas: 0 };
+  while (!parar.signal.aborted && (opt.rodadas === 0 || total.rodadas < opt.rodadas)) {
+    total.rodadas++;
+    console.log(`[${agora()}] rodada ${total.rodadas}`);
+    try {
+      await reporEstoque();
+      const r = await rodada(opt);
+      total.criados += r.criados;
+      total.pedidos += r.pedidos;
+      total.falhas += r.falhas;
+    } catch (err) {
+      // Uma rodada com erro (ex.: banco fora do ar) não derruba a simulação: tenta de novo na próxima.
+      total.falhas++;
+      console.error(`  ! rodada ${total.rodadas}: ${(err as Error).message}`);
+    }
+    if (opt.rodadas === 0 || total.rodadas < opt.rodadas) await esperar(opt.intervalo * 1000, parar.signal);
+  }
+  console.log(
+    `Concluído: ${total.rodadas} rodada(s), ${total.criados} cliente(s) criados, ${total.pedidos} pedido(s), ${total.falhas} falha(s).`,
+  );
+  if (total.falhas > 0) process.exitCode = 1;
 }
 
 main()

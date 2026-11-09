@@ -36,6 +36,12 @@ export async function getCart(userId: string) {
   return { items, subtotalCents };
 }
 
+/** Quantidade de unidades no carrinho do próprio usuário (selo do ícone no cabeçalho). */
+export async function cartCount(userId: string): Promise<number> {
+  const r = await db.cartItem.aggregate({ where: { cart: { userId } }, _sum: { quantity: true } });
+  return r._sum.quantity ?? 0;
+}
+
 /** Prévia de frete e total para exibição. O checkout recalcula tudo de novo. */
 export function previewTotals(subtotalCents: number, uf: string | undefined) {
   const shippingCents = uf ? calcShippingCents(uf, subtotalCents) : 0;

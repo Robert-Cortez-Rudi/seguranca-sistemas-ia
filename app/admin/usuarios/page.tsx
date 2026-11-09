@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import { listUsers } from "@/lib/services/admin";
 import { updateUserAction } from "../actions";
 
-const ROLE_BADGE = { CUSTOMER: "bg-paper", SELLER: "bg-bubble", ADMIN: "bg-sun" } as const;
+const ROLE_BADGE = { CUSTOMER: "bg-paper", SELLER: "bg-bubble", ADMIN: "bg-blue" } as const;
 
 // A01 — Gestão de usuários (ADMIN). Sem CPF, telefone ou hash de senha na listagem.
 export default async function UsersPage() {
@@ -12,10 +11,10 @@ export default async function UsersPage() {
   const users = await listUsers();
   const now = new Date();
   return (
-    <main className="mx-auto max-w-5xl space-y-7 px-4 py-10">
-      <div className="space-y-3">
-        <Link href="/admin" className="link text-sm">← Auditoria</Link>
+    <main className="space-y-6">
+      <div>
         <h1 className="page-title">Usuários</h1>
+        <p className="mt-1 text-sm text-muted">Ative, desative, desbloqueie e mude o perfil das contas. CPF e telefone não aparecem aqui.</p>
       </div>
       <div className="table-wrap">
         <table className="table-pop min-w-[760px] text-sm">
@@ -34,7 +33,7 @@ export default async function UsersPage() {
                     <span className={`badge ${ROLE_BADGE[u.role]}`}>{u.role}{u.totpEnabled ? " · 2FA" : ""}</span>
                   </td>
                   <td>
-                    <span className={`badge ${!u.active ? "bg-coral" : locked ? "bg-sun" : "bg-mint"}`}>
+                    <span className={`badge dot ${!u.active ? "bg-coral" : locked ? "bg-sun" : "bg-mint"}`}>
                       {!u.active ? "Desativado" : locked ? "Bloqueado" : "Ativo"}
                     </span>
                   </td>

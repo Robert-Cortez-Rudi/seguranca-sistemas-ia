@@ -21,8 +21,8 @@ export function CardForm() {
       <Field label="Mês (MM)" name="expMonth" inputMode="numeric" autoComplete="cc-exp-month" required maxLength={2} errors={fe?.expMonth} />
       <Field label="Ano (AAAA)" name="expYear" inputMode="numeric" autoComplete="cc-exp-year" required maxLength={4} errors={fe?.expYear} />
       <Field label="CVV (não é armazenado)" name="cvv" type="password" inputMode="numeric" autoComplete="cc-csc" required maxLength={4} errors={fe?.cvv} />
-      <div className="sm:col-span-2">
-        <SubmitButton>Salvar cartão</SubmitButton>
+      <div className="flex justify-end border-t border-line pt-4 sm:col-span-2">
+        <SubmitButton className="sm:w-auto">Salvar cartão</SubmitButton>
       </div>
     </form>
   );

@@ -29,8 +29,8 @@ export function AddressForm() {
           ))}
         </select>
       </div>
-      <div className="sm:col-span-2">
-        <SubmitButton>Salvar endereço</SubmitButton>
+      <div className="flex justify-end border-t border-line pt-4 sm:col-span-2">
+        <SubmitButton className="sm:w-auto">Salvar endereço</SubmitButton>
       </div>
     </form>
   );
