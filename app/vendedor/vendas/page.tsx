@@ -25,18 +25,18 @@ export default async function SalesPage() {
         <p className="mt-1 text-sm text-muted">Avance cada entrega na ordem: Pago → Separando → Enviado → Entregue.</p>
       </div>
 
-      <section aria-label="Resumo" className="grid divide-y divide-line rounded-lg border border-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        <div className="metric">
+      <section aria-label="Resumo" className="grid gap-4 sm:grid-cols-3">
+        <div className="tile metric tint-blue">
           <span className="text-sm font-semibold text-muted">A enviar</span>
           <span className={`metric-value ${toShip > 0 ? "text-accent" : ""}`}>{toShip}</span>
           <span className="text-xs text-muted">pagas ou em separação</span>
         </div>
-        <div className="metric">
+        <div className="tile metric tint-peach">
           <span className="text-sm font-semibold text-muted">Em trânsito</span>
           <span className="metric-value">{inTransit}</span>
           <span className="text-xs text-muted">com código de rastreio</span>
         </div>
-        <div className="metric">
+        <div className="tile metric tint-mint">
           <span className="text-sm font-semibold text-muted">Entregues</span>
           <span className="metric-value">{delivered}</span>
           <span className="text-xs text-muted">entregas concluídas</span>

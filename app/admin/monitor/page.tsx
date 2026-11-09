@@ -64,9 +64,16 @@ export default async function MonitorPage({
         <RefreshControls updatedAt={time(counts.generatedAt)} />
       </div>
 
-      <section aria-label="Totais" className="grid divide-y divide-line rounded-lg border border-line md:grid-cols-3 md:divide-x md:divide-y-0">
+      <p className="notice notice-info">
+        <strong>Dica para a aula:</strong> ligue a atualização automática e rode <code className="font-mono">npm run simular</code> em
+        outro terminal. Clique num total para ver os registros dele. As tentativas de ataque barradas aparecem em{" "}
+        <Link href="/admin" className="link">Auditoria</Link>.
+      </p>
+
+      <section aria-label="Totais" className="grid gap-4 md:grid-cols-3">
         <MetricCard
           href={href("usuarios")}
+          tint="tint-blue"
           active={tab === "usuarios"}
           label="Usuários"
           value={counts.users.total}
@@ -78,6 +85,7 @@ export default async function MonitorPage({
         </MetricCard>
         <MetricCard
           href={href("pedidos")}
+          tint="tint-peach"
           active={tab === "pedidos"}
           label="Pedidos"
           value={counts.orders.total}
@@ -89,6 +97,7 @@ export default async function MonitorPage({
         </MetricCard>
         <MetricCard
           href={href("transacoes")}
+          tint="tint-mint"
           active={tab === "transacoes"}
           label="Transações"
           value={counts.transactions.total}
@@ -120,6 +129,7 @@ export default async function MonitorPage({
 
 function MetricCard({
   href: to,
+  tint,
   active,
   label,
   value,
@@ -128,6 +138,7 @@ function MetricCard({
   children,
 }: {
   href: string;
+  tint: string;
   active: boolean;
   label: string;
   value: number;
@@ -139,9 +150,12 @@ function MetricCard({
     <Link
       href={to}
       aria-current={active ? "page" : undefined}
-      className={`metric relative hover:bg-subtle ${active ? "after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:bg-ink" : ""}`}
+      className={`tile metric ${tint} ${active ? "ring-2 ring-accent" : ""}`}
     >
-      <span className="text-sm font-bold">{label}</span>
+      <span className="flex items-center justify-between gap-2 text-sm font-bold">
+        {label}
+        <span className="text-xs font-semibold text-accent-strong">{active ? "Exibindo abaixo" : "Ver registros →"}</span>
+      </span>
       <span className="metric-value">{value.toLocaleString("pt-BR")}</span>
       <span className="text-xs text-muted">
         <span className={recent > 0 ? "font-semibold text-success" : ""}>+{recent.toLocaleString("pt-BR")}</span> nos

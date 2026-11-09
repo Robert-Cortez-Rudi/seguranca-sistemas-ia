@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
-/* SecureShop — design "Balcão".
+/* SecureShop — design "Balcão" (versão viva).
+   Cor com propósito, no espírito do Walmart e do painel do Etsy (Mobbin): faixa superior azul
+   sólida, blocos de atalho em tons suaves com foto do produto, selos de status coloridos e
+   saudação com atalhos nos painéis. Ainda sem gradiente, sem vidro e sem sombra decorativa.
    Varejo claro, no espírito das grandes lojas de departamento (referência Mobbin: listagens e
    páginas de produto do IKEA, carrinho do GetYourGuide): página branca, foto do produto em
    fundo cinza-claro, nome em caixa alta, preço grande com centavos pequenos, situação de
@@ -18,21 +21,28 @@
   --color-line: #dfdfdf;
 
   /* Marca: um azul sóbrio para ação e link; amarelo só na etiqueta de preço. */
-  --color-accent: #1a4d8f;
-  --color-accent-strong: #133b6f;
-  --color-accent-soft: #edf2f9;
-  --color-deal: #ffd83b;
+  --color-accent: #0b5bd3;
+  --color-accent-strong: #0846a6;
+  --color-accent-soft: #e8f0fd;
+  --color-deal: #ffc72c;
+
+  /* Tons suaves dos blocos de atalho e das faixas de totais. */
+  --color-tint-blue: #e6efff;
+  --color-tint-peach: #fde9dd;
+  --color-tint-yellow: #fff3cc;
+  --color-tint-lilac: #eee8fb;
+  --color-tint-mint: #def3e6;
   --color-night: #111111;
   --color-night-2: #2b2b2b;
   --color-danger: #c4161c;
   --color-success: #0a7f3f;
 
   /* Nomes antigos usados em selos (bg-mint/bg-coral/bg-sun/bg-bubble). */
-  --color-coral: #fdeced;
-  --color-cobalt: #1a4d8f;
-  --color-sun: #fff6cc;
-  --color-mint: #e7f5ec;
-  --color-bubble: #f1f1f1;
+  --color-coral: #fde8e9;
+  --color-cobalt: #0b5bd3;
+  --color-sun: #fff3cc;
+  --color-mint: #def3e6;
+  --color-bubble: #eee8fb;
 
   --shadow-card: none;
   --shadow-lift: 0 6px 20px -8px rgb(0 0 0 / 0.18);
@@ -58,19 +68,19 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-ink);
+    outline: 2px solid var(--color-accent);
     outline-offset: 3px;
   }
 
   input[type="radio"],
   input[type="checkbox"] {
-    accent-color: var(--color-ink);
+    accent-color: var(--color-accent);
     width: 1.1rem;
     height: 1.1rem;
   }
 
   ::selection {
-    background: var(--color-deal);
+    background: #cfe0ff;
     color: var(--color-ink);
   }
 
@@ -134,14 +144,14 @@
   }
 
   .link {
-    color: var(--color-ink);
+    color: var(--color-accent);
     font-weight: 600;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
   }
   .link:hover {
-    color: var(--color-accent);
+    color: var(--color-accent-strong);
     text-decoration-thickness: 2px;
   }
   .link-danger {
@@ -171,7 +181,9 @@
       color 140ms ease-out;
   }
   .btn:hover {
-    background: var(--color-subtle);
+    background: var(--color-accent-soft);
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
   }
   .btn:disabled {
     cursor: progress;
@@ -261,16 +273,15 @@
     padding: 1rem 1.25rem;
   }
 
-  /* Selo de status: texto com ponto colorido, sem fundo chamativo. */
+  /* Selo de status: pílula com fundo suave e ponto colorido (verde ok, âmbar espera, vermelho erro). */
   .badge {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    border: 1px solid var(--color-line);
     border-radius: 999px;
-    background: var(--color-paper);
+    background: var(--color-subtle);
     color: var(--color-ink);
-    padding: 0.1rem 0.6rem;
+    padding: 0.15rem 0.65rem;
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.5;
@@ -281,39 +292,38 @@
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
-    background: #9a9a9a;
+    background: #8a8a8a;
   }
   .badge.bg-paper {
-    background: var(--color-paper);
+    background: var(--color-subtle);
   }
   .badge.bg-mint {
-    background: var(--color-paper);
+    background: var(--color-mint);
+    color: #075a2c;
   }
   .badge.bg-mint.dot::before {
     background: var(--color-success);
   }
   .badge.bg-coral {
-    background: var(--color-paper);
-    color: var(--color-danger);
-    border-color: #f1b9bb;
+    background: var(--color-coral);
+    color: #a10f15;
   }
   .badge.bg-coral.dot::before {
     background: var(--color-danger);
   }
   .badge.bg-sun {
     background: var(--color-sun);
-    border-color: #f0dc8a;
+    color: #6b4600;
   }
   .badge.bg-sun.dot::before {
-    background: #c99a00;
+    background: #d39b00;
   }
   .badge.bg-bubble {
-    background: var(--color-subtle);
-    border-color: var(--color-subtle);
+    background: var(--color-bubble);
+    color: #4b2e8a;
   }
   .badge.bg-blue {
     background: var(--color-accent-soft);
-    border-color: var(--color-accent-soft);
     color: var(--color-accent-strong);
   }
 
@@ -394,8 +404,9 @@
     border-color: #929292;
   }
   .choice:has(input:checked) {
-    border-color: var(--color-ink);
-    box-shadow: inset 0 0 0 1px var(--color-ink);
+    border-color: var(--color-accent);
+    background: #f5f9ff;
+    box-shadow: inset 0 0 0 1px var(--color-accent);
   }
 
   .notice {
@@ -433,7 +444,8 @@
     border-collapse: collapse;
   }
   .table-pop th {
-    border-bottom: 1px solid var(--color-ink);
+    background: var(--color-subtle);
+    border-bottom: 1px solid var(--color-line);
     padding: 0.7rem 0.9rem;
     text-align: left;
     font-size: 0.75rem;
@@ -452,47 +464,48 @@
     background: #fafafa;
   }
 
-  /* ---------- Cabeçalho da loja ---------- */
+  /* ---------- Cabeçalho: faixa azul sólida + barra de atalhos azul-clara ---------- */
   .topbar {
-    background: var(--color-paper);
-    color: var(--color-ink);
+    background: var(--color-accent);
+    color: #fff;
   }
   .topbar-sub {
-    background: var(--color-paper);
+    background: var(--color-accent-soft);
     color: var(--color-ink);
-    border-bottom: 1px solid var(--color-line);
   }
   .notice-strip {
-    background: var(--color-ink);
-    color: #f2f2f2;
+    background: var(--color-accent-strong);
+    color: #e8f0fd;
   }
   .nav-link {
     font-weight: 600;
     border-radius: 999px;
-    padding: 0.4rem 0.7rem;
+    padding: 0.4rem 0.75rem;
   }
   .nav-link:hover {
-    background: var(--color-subtle);
+    background: #d4e3fb;
+  }
+  .head-action {
+    border-radius: 0.6rem;
+    color: #fff;
+  }
+  .head-action:hover {
+    background: rgb(255 255 255 / 0.14);
   }
   .search {
     display: flex;
     align-items: center;
     border-radius: 999px;
-    background: var(--color-subtle);
-    transition: box-shadow 120ms ease-out, background-color 120ms ease-out;
-  }
-  .search:hover {
-    background: #ececec;
+    background: var(--color-paper);
   }
   .search:focus-within {
-    background: var(--color-paper);
-    box-shadow: inset 0 0 0 2px var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-deal);
   }
   .search input {
     flex: 1;
     min-width: 0;
     border: 0;
-    padding: 0.75rem 0.5rem 0.75rem 0;
+    padding: 0.75rem 0.5rem 0.75rem 1.2rem;
     font-size: 0.95rem;
     color: var(--color-ink);
     background: transparent;
@@ -503,21 +516,57 @@
   .search input:focus {
     outline: none;
   }
-  .search .search-icon {
-    margin: 0 0.6rem 0 1.1rem;
-    color: var(--color-ink);
-  }
   .search button {
+    display: grid;
+    place-items: center;
     margin-right: 0.3rem;
+    width: 2.4rem;
+    height: 2.4rem;
     border-radius: 999px;
-    padding: 0.45rem 1rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--color-ink);
+    background: var(--color-accent-strong);
+    color: #fff;
     cursor: pointer;
   }
   .search button:hover {
-    background: #e2e2e2;
+    background: var(--color-ink);
+  }
+
+  /* Bloco de atalho em tom suave (vitrine e painéis). */
+  .tile {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    transition: transform 160ms ease-out;
+  }
+  .tile:hover {
+    transform: translateY(-2px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tile:hover {
+      transform: none;
+    }
+  }
+  /* Selos neutros sobre bloco colorido ficam brancos para continuar visíveis. */
+  .tile .badge.bg-paper,
+  .tile .badge.bg-blue,
+  .tile .badge.bg-bubble {
+    background: var(--color-paper);
+  }
+  .tint-blue {
+    background: var(--color-tint-blue);
+  }
+  .tint-peach {
+    background: var(--color-tint-peach);
+  }
+  .tint-yellow {
+    background: var(--color-tint-yellow);
+  }
+  .tint-lilac {
+    background: var(--color-tint-lilac);
+  }
+  .tint-mint {
+    background: var(--color-tint-mint);
   }
 
   /* ---------- Navegação lateral (conta, vendedor, admin) ---------- */
@@ -535,11 +584,8 @@
     background: var(--color-subtle);
   }
   .side-nav a[aria-current="page"] {
-    background: var(--color-ink);
-    color: #fff;
-  }
-  .side-nav a[aria-current="page"] svg {
-    color: #fff;
+    background: var(--color-accent-soft);
+    color: var(--color-accent-strong);
   }
 
   /* Abas (painel de monitoramento). */
@@ -565,8 +611,8 @@
     color: var(--color-ink);
   }
   .tabs a[aria-current="page"] {
-    border-color: var(--color-ink);
-    color: var(--color-ink);
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
   }
 
   /* Faixa de totais: colunas separadas por fio, sem cartões soltos. */
@@ -642,10 +688,13 @@
   }
   .steps li.is-done::before,
   .steps li[aria-current="step"]::before {
-    background: var(--color-success);
-    border-color: var(--color-success);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .steps li[aria-current="step"]::before {
+    box-shadow: 0 0 0 4px #cfe0ff;
   }
   .steps li.is-done::after {
-    background: var(--color-success);
+    background: var(--color-accent);
   }
 }

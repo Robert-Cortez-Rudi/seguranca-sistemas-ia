@@ -29,18 +29,18 @@ export default async function SellerPage() {
         </div>
       </div>
 
-      <section aria-label="Resumo" className="grid divide-y divide-line rounded-lg border border-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        <div className="metric">
+      <section aria-label="Resumo" className="grid gap-4 sm:grid-cols-3">
+        <div className="tile metric tint-blue">
           <span className="text-sm font-semibold text-muted">Produtos à venda</span>
           <span className="metric-value">{active}</span>
           <span className="text-xs text-muted">de {products.length} cadastrados</span>
         </div>
-        <div className="metric">
+        <div className="tile metric tint-peach">
           <span className="text-sm font-semibold text-muted">Unidades em estoque</span>
           <span className="metric-value">{units.toLocaleString("pt-BR")}</span>
           <span className="text-xs text-muted">somando todos os produtos</span>
         </div>
-        <div className="metric">
+        <div className="tile metric tint-yellow">
           <span className="text-sm font-semibold text-muted">Estoque baixo</span>
           <span className={`metric-value ${low > 0 ? "text-danger" : ""}`}>{low}</span>
           <span className="text-xs text-muted">anúncios ativos com 5 unidades ou menos</span>
