@@ -8,7 +8,7 @@ export function MfaForm({ next }: { next: string }) {
   const [state, action] = useActionState(mfaAction, undefined);
   const [recovery, setRecovery] = useState(false);
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-5">
       <FormMessage error={state?.error} />
       <input type="hidden" name="next" value={next} />
       <input type="hidden" name="kind" value={recovery ? "recovery" : "totp"} />
@@ -18,7 +18,7 @@ export function MfaForm({ next }: { next: string }) {
         <Field key="totp" label="Código do aplicativo autenticador" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" required maxLength={6} />
       )}
       <SubmitButton>Verificar</SubmitButton>
-      <button type="button" onClick={() => setRecovery(!recovery)} className="link cursor-pointer text-sm">
+      <button type="button" onClick={() => setRecovery(!recovery)} className="link block w-full cursor-pointer text-center text-sm">
         {recovery ? "Usar o código do aplicativo" : "Usar um código de recuperação"}
       </button>
     </form>

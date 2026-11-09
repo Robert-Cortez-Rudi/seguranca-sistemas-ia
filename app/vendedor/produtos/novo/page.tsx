@@ -6,12 +6,20 @@ import { ProductForm } from "../../product-form";
 export default async function NewProductPage() {
   await requireUser(["SELLER"]);
   return (
-    <main className="mx-auto max-w-lg space-y-6 px-4 py-10">
-      <Link href="/vendedor" className="link text-sm">← Meus produtos</Link>
-      <h1 className="page-title">Novo produto</h1>
-      <div className="card p-6">
-        <ProductForm />
+    <main className="space-y-6">
+      <div>
+        <Link href="/vendedor" className="link text-sm">← Meus produtos</Link>
+        <h1 className="page-title">Novo produto</h1>
+        <p className="mt-1 text-sm text-muted">O preço é gravado em centavos e o checkout sempre usa o valor do banco.</p>
       </div>
+      <section className="card max-w-3xl">
+        <div className="card-header">
+          <h2 className="section-title">Dados do anúncio</h2>
+        </div>
+        <div className="p-5 sm:p-6">
+          <ProductForm />
+        </div>
+      </section>
     </main>
   );
 }

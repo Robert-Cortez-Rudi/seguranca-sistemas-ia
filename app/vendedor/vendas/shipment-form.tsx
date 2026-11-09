@@ -14,9 +14,9 @@ export function ShipmentForm({ shipmentId, next }: { shipmentId: string; next: S
       <input type="hidden" name="shipmentId" value={shipmentId} />
       <input type="hidden" name="status" value={next} />
       {next === "ENVIADO" && (
-        <input name="trackingCode" placeholder="Código de rastreio" required pattern="[A-Za-z0-9]{8,20}" maxLength={20} aria-label="Código de rastreio" className="input w-52 py-1.5" />
+        <input name="trackingCode" placeholder="Código de rastreio" required pattern="[A-Za-z0-9]{8,20}" maxLength={20} aria-label="Código de rastreio" className="input w-56 font-mono" />
       )}
-      <button type="submit" className="btn btn-blue btn-sm">
+      <button type="submit" className="btn btn-primary">
         Marcar como {SHIPMENT_STATUS_LABEL[next]}
       </button>
       <FormMessage error={state?.error} success={state?.success} />

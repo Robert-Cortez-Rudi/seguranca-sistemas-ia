@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { CardIcon, ChevronRightIcon, KeyIcon, PinIcon, ReceiptIcon } from "@/components/icons";
 import { requireUser } from "@/lib/auth";
 import { decrypt } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { maskCpf, maskPhone } from "@/lib/mask";
+
+const ROLE_LABEL = { CUSTOMER: "Cliente", SELLER: "Vendedor", ADMIN: "Administrador" } as const;
 
 // A01/A04 — Dados do próprio usuário, sempre mascarados. O select explícito
 // traz só o necessário; o dado completo nunca sai do servidor.
@@ -16,50 +19,64 @@ export default async function AccountPage() {
   const phone = row.phoneEnc ? maskPhone(decrypt(row.phoneEnc, "user.phone")) : "—";
 
   const links = [
-    { href: "/conta/seguranca", label: "Segurança", hint: "Senha e 2FA", color: "bg-sun" },
+    { href: "/conta/seguranca", label: "Segurança", hint: "Senha e verificação em duas etapas", icon: KeyIcon },
     ...(user.role === "CUSTOMER"
       ? [
-          { href: "/conta/pedidos", label: "Meus pedidos", hint: "Acompanhe as entregas", color: "bg-mint" },
-          { href: "/conta/enderecos", label: "Endereços", hint: "Onde entregar", color: "bg-bubble" },
-          { href: "/conta/cartoes", label: "Cartões", hint: "Formas de pagamento", color: "bg-coral" },
+          { href: "/conta/pedidos", label: "Meus pedidos", hint: "Acompanhe pagamentos e entregas", icon: ReceiptIcon },
+          { href: "/conta/enderecos", label: "Endereços", hint: "Onde entregar suas compras", icon: PinIcon },
+          { href: "/conta/cartoes", label: "Cartões", hint: "Formas de pagamento salvas", icon: CardIcon },
         ]
       : []),
   ];
 
   return (
-    <main className="mx-auto max-w-2xl space-y-7 px-4 py-10">
-      <h1 className="page-title">Minha conta</h1>
+    <main className="space-y-6">
+      <div>
+        <h1 className="page-title">Meus dados</h1>
+        <p className="mt-1 text-sm text-muted">Dados pessoais exibidos de forma mascarada. O valor completo nunca sai do servidor.</p>
+      </div>
+
       <section className="card overflow-hidden">
-        <div className="flex items-center gap-4 border-b border-line p-5">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-line bg-sun font-display text-2xl font-semibold text-ink" aria-hidden="true">
-            {row.name.charAt(0).toUpperCase()}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-5 sm:p-6">
           <div className="min-w-0">
-            <p className="truncate font-display text-xl font-semibold leading-tight">{row.name}</p>
-            <p className="truncate text-sm opacity-90">{row.email}</p>
+            <p className="truncate text-xl font-bold leading-tight">{row.name}</p>
+            <p className="truncate text-sm text-muted">{row.email}</p>
           </div>
+          <span className="badge bg-blue">{ROLE_LABEL[user.role]}</span>
         </div>
-        <dl className="grid grid-cols-[7rem_1fr] gap-y-3 p-5 text-sm">
-          <dt className="font-bold text-muted">CPF</dt>
-          <dd className="font-mono">{cpf}</dd>
-          <dt className="font-bold text-muted">Telefone</dt>
-          <dd className="font-mono">{phone}</dd>
-          <dt className="font-bold text-muted">2FA</dt>
-          <dd>
-            <span className={`badge ${row.totpEnabled ? "bg-mint" : "bg-paper"}`}>{row.totpEnabled ? "Ativa" : "Desativada"}</span>
-          </dd>
+        <dl className="grid gap-px bg-line sm:grid-cols-3">
+          <div className="bg-paper p-5">
+            <dt className="text-sm text-muted">CPF</dt>
+            <dd className="num mt-1.5 font-mono text-sm font-semibold">{cpf}</dd>
+          </div>
+          <div className="bg-paper p-5">
+            <dt className="text-sm text-muted">Telefone</dt>
+            <dd className="num mt-1.5 font-mono text-sm font-semibold">{phone}</dd>
+          </div>
+          <div className="bg-paper p-5">
+            <dt className="text-sm text-muted">Verificação em duas etapas</dt>
+            <dd className="mt-1.5">
+              <span className={`badge dot ${row.totpEnabled ? "bg-mint" : "bg-sun"}`}>{row.totpEnabled ? "Ativa" : "Desativada"}</span>
+            </dd>
+          </div>
         </dl>
       </section>
-      <nav className="grid gap-5 sm:grid-cols-2" aria-label="Seções da conta">
-        {links.map((l) => (
-          <Link key={l.href} href={l.href} className={`card card-hover flex items-center justify-between gap-3 p-5 ${l.color}`}>
-            <span>
-              <span className="block font-display text-lg font-semibold leading-tight">{l.label}</span>
-              <span className="text-sm font-medium">{l.hint}</span>
-            </span>
-            <span className="arrow text-xl" aria-hidden="true">→</span>
-          </Link>
-        ))}
+
+      <nav aria-label="Seções da conta">
+        <ul className="divide-y divide-line border-y border-line">
+          {links.map(({ href, label, hint, icon: Icon }) => (
+            <li key={href}>
+              <Link href={href} className="group flex items-center gap-4 px-1 py-4 hover:bg-subtle">
+                <Icon className="size-6 shrink-0" />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-bold group-hover:underline">{label}</span>
+                  <span className="block text-sm text-muted">{hint}</span>
+                </span>
+                <ChevronRightIcon className="size-5" />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </nav>
     </main>
   );

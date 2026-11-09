@@ -109,6 +109,47 @@ Para rodar uma única vez numa data: `/SC ONCE /SD 05/10/2026 /ST 14:00`. Para v
 use `schtasks /Query /TN "SecureShop semana3"`. Para apagar, use `schtasks /Delete /TN "SecureShop semana3" /F`.
 O computador precisa estar ligado e com o Docker e a aplicação rodando no horário.
 
+## Monitor da aula (usuários, pedidos e transações)
+
+Para acompanhar o sistema enquanto a turma tenta quebrá-lo, há duas peças:
+
+1. **Tela** — entre como `admin@secureshop.local` e abra **http://localhost:3000/admin/monitor**
+   (ou "Monitor" no menu do admin). Ela mostra:
+   - a **quantidade** de usuários, pedidos e transações, com quantos surgiram nos últimos 10 minutos
+     e a divisão por tipo (clientes/vendedores/admins; pagos/aguardando/cancelados;
+     aprovadas/recusadas/rejeitadas);
+   - o botão **Atualizar**, que busca os números de novo, e a opção de atualização automática
+     a cada 5, 10 ou 30 segundos;
+   - uma **tabela com os registros** de cada um dos três (abas Usuários, Pedidos e Transações),
+     25 por página, mais recentes primeiro. CPF, telefone e cartão aparecem mascarados.
+2. **Script** — com a aplicação rodando (`npm run dev`), em outro terminal:
+
+   ```bash
+   npm run simular
+   ```
+
+   A cada 5 segundos ele cria 2 clientes, faz 1 compra com cada um e paga pelo webhook
+   (80% aprovadas, 20% recusadas). Pare com **Ctrl+C**. Para mudar o ritmo, use o
+   `npm run popular` com `--continuo`:
+
+   ```bash
+   npm run popular -- --continuo --clientes 5 --compras 2 --pagamento aleatorio --intervalo 3
+   ```
+
+   | Opção | Padrão | O que faz |
+   |---|---|---|
+   | `--continuo` | desligado | repete as rodadas até Ctrl+C |
+   | `--intervalo S` | 5 | segundos entre rodadas (1 a 3600) |
+   | `--rodadas N` | 0 | para depois de N rodadas (0 = sem limite) |
+
+   No modo contínuo, produto com menos de 3 unidades volta a ter 50, para as compras não pararem.
+
+**Transação** é cada evento de pagamento que chegou ao webhook com assinatura válida
+(tabela `PaymentTransaction`): *aprovada* (pedido pago), *recusada* (pedido cancelado e estoque
+devolvido) ou *rejeitada* (assinatura certa, mas a aplicação recusou, por exemplo valor diferente
+do pedido). Chamadas com assinatura forjada não viram transação: aparecem como `WEBHOOK_REJECTED`
+na Auditoria.
+
 ## Acesse sempre pelo endereço do `APP_URL`
 
 O cookie de sessão tem a flag `Secure`. Os navegadores só a aceitam em HTTPS ou em
@@ -190,7 +231,7 @@ app/                 páginas e Server Actions (cada rota indica em comentário 
   (loja)/            produto, carrinho, checkout, pagamento simulado
   conta/             dados, endereços, cartões, pedidos, segurança
   vendedor/          produtos e vendas do vendedor
-  admin/             AuditLog e usuários
+  admin/             monitor (contagens e registros), AuditLog e usuários
   api/webhooks/      webhook de pagamento (HMAC)
 lib/                 regras de segurança e de negócio
   services/          lógica testável, sem dependência de cookies
@@ -198,7 +239,7 @@ lib/                 regras de segurança e de negócio
 middleware.ts        CSP com nonce, CSRF de API, sessão e perfil por rota
 server.mjs           servidor HTTP que protege o IP usado no limite de tentativas
 prisma/              schema, migrations e seed
-scripts/             gerador do .env e script de criação do banco de testes
+scripts/             gerador do .env, script popular/simular e criação do banco de testes
 tests/
   unit/              testes unitários: funções puras de lib/ (validadores, cifra, CSP, política de senha, frete)
   functional/        testes funcionais: fluxos completos nos serviços com o banco de teste (login, checkout, IDOR)

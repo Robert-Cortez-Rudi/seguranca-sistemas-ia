@@ -1,3 +1,4 @@
+import { PinIcon } from "@/components/icons";
 import { requireUser } from "@/lib/auth";
 import { listAddresses } from "@/lib/services/account";
 import { deleteAddressAction } from "../actions";
@@ -8,31 +9,55 @@ export default async function AddressesPage() {
   const user = await requireUser(["CUSTOMER"]);
   const addresses = await listAddresses(user.id);
   return (
-    <main className="mx-auto max-w-2xl space-y-8 px-4 py-10">
-      <h1 className="page-title">Endereços</h1>
-      <ul className="space-y-4">
+    <main className="space-y-6">
+      <div>
+        <h1 className="page-title">Endereços</h1>
+        <p className="mt-1 text-sm text-muted">Onde entregar suas compras. Os endereços ficam cifrados no banco.</p>
+      </div>
+
+      <ul className="grid gap-4 sm:grid-cols-2">
         {addresses.map((a) => (
-          <li key={a.id} className="card flex items-start justify-between gap-4 p-5 text-sm">
-            <div className="space-y-1">
-              <p className="badge bg-bubble">{a.label}</p>
-              <p className="font-semibold">
-                {a.recipient} — {a.street}, {a.number} {a.complement}
+          <li key={a.id} className="card flex flex-col gap-3 p-5 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2 font-semibold">
+                <span className="inline-block text-ink">
+                  <PinIcon className="size-4" />
+                </span>
+                {a.label}
+              </span>
+              <span className="badge bg-paper">{a.uf}</span>
+            </div>
+            <div className="space-y-0.5">
+              <p className="font-semibold">{a.recipient}</p>
+              <p>
+                {a.street}, {a.number} {a.complement}
               </p>
               <p className="text-muted">
                 {a.district}, {a.city}/{a.uf} — CEP {a.cep.replace(/(\d{5})(\d{3})/, "$1-$2")}
               </p>
             </div>
-            <form action={deleteAddressAction}>
+            <form action={deleteAddressAction} className="mt-auto flex justify-end border-t border-line pt-3">
               <input type="hidden" name="id" value={a.id} />
-              <button type="submit" className="link link-danger cursor-pointer text-xs">Remover</button>
+              <button type="submit" className="btn btn-danger btn-sm">Remover</button>
             </form>
           </li>
         ))}
-        {addresses.length === 0 && <li className="text-sm text-muted">Nenhum endereço cadastrado.</li>}
+        {addresses.length === 0 && (
+          <li className="card flex flex-col items-center gap-2 p-8 text-center sm:col-span-2">
+            <PinIcon className="size-8 text-muted" />
+            <p className="font-semibold">Nenhum endereço cadastrado</p>
+            <p className="text-sm text-muted">Cadastre um endereço abaixo para receber suas compras.</p>
+          </li>
+        )}
       </ul>
-      <section className="card p-6">
-        <h2 className="section-title mb-5">Novo endereço</h2>
-        <AddressForm />
+
+      <section className="card">
+        <div className="card-header">
+          <h2 className="section-title">Novo endereço</h2>
+        </div>
+        <div className="p-5 sm:p-6">
+          <AddressForm />
+        </div>
       </section>
     </main>
   );

@@ -35,7 +35,7 @@ const PRODUCTS: Record<string, { name: string; description: string; priceCents: 
 async function main() {
   // Recria do zero: ordem das filhas para as pais.
   await db.$transaction([
-    db.auditLog.deleteMany(), db.shipment.deleteMany(), db.orderItem.deleteMany(), db.order.deleteMany(),
+    db.auditLog.deleteMany(), db.paymentTransaction.deleteMany(), db.webhookEvent.deleteMany(), db.shipment.deleteMany(), db.orderItem.deleteMany(), db.order.deleteMany(),
     db.cartItem.deleteMany(), db.cart.deleteMany(), db.product.deleteMany(), db.paymentCard.deleteMany(),
     db.address.deleteMany(), db.recoveryCode.deleteMany(), db.passwordResetToken.deleteMany(),
     db.session.deleteMany(), db.rateLimit.deleteMany(), db.user.deleteMany(),

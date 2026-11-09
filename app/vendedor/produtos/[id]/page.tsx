@@ -10,12 +10,23 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const product = await getSellerProduct(seller.id, (await params).id);
   if (!product) notFound();
   return (
-    <main className="mx-auto max-w-lg space-y-6 px-4 py-10">
-      <Link href="/vendedor" className="link text-sm">← Meus produtos</Link>
-      <h1 className="page-title">Editar produto</h1>
-      <div className="card p-6">
-        <ProductForm product={product} />
+    <main className="space-y-6">
+      <div>
+        <Link href="/vendedor" className="link text-sm">← Meus produtos</Link>
+        <div className="mt-1 flex flex-wrap items-center gap-3">
+          <h1 className="page-title">Editar produto</h1>
+          <span className={`badge dot ${product.active ? "bg-mint" : "bg-paper"}`}>{product.active ? "À venda" : "Pausado"}</span>
+        </div>
+        <p className="mt-1 text-sm text-muted">{product.name}</p>
       </div>
+      <section className="card max-w-3xl">
+        <div className="card-header">
+          <h2 className="section-title">Dados do anúncio</h2>
+        </div>
+        <div className="p-5 sm:p-6">
+          <ProductForm product={product} />
+        </div>
+      </section>
     </main>
   );
 }

@@ -31,6 +31,13 @@ enum ShipmentStatus {
   ENTREGUE
 }
 
+// Resultado de uma transação de pagamento recebida pelo webhook assinado (A08).
+enum TransactionResult {
+  APPROVED // pagamento aprovado: pedido PAID
+  DECLINED // pagamento recusado pelo gateway: pedido CANCELED e estoque devolvido
+  REJECTED // evento assinado, mas recusado pela aplicação (valor divergente, transição inválida...)
+}
+
 enum AuditAction {
   LOGIN_OK
   LOGIN_FAIL
@@ -193,21 +200,22 @@ model CartItem {
 }
 
 model Order {
-  id                 String      @id @default(cuid())
+  id                 String               @id @default(cuid())
   userId             String
-  status             OrderStatus @default(PENDING_PAYMENT)
+  status             OrderStatus          @default(PENDING_PAYMENT)
   subtotalCents      Int
   shippingCents      Int
   totalCents         Int
   shippingAddressEnc String // cópia cifrada do endereço no momento da compra
-  shippingUf         String      @db.Char(2)
+  shippingUf         String               @db.Char(2)
   paymentCardId      String
-  createdAt          DateTime    @default(now())
+  createdAt          DateTime             @default(now())
   paidAt             DateTime?
-  user               User        @relation(fields: [userId], references: [id])
-  paymentCard        PaymentCard @relation(fields: [paymentCardId], references: [id])
+  user               User                 @relation(fields: [userId], references: [id])
+  paymentCard        PaymentCard          @relation(fields: [paymentCardId], references: [id])
   items              OrderItem[]
   shipments          Shipment[]
+  transactions       PaymentTransaction[]
 
   @@index([userId])
 }
@@ -247,6 +255,23 @@ model WebhookEvent {
   id         String   @id // eventId enviado pelo gateway
   orderId    String
   receivedAt DateTime @default(now())
+}
+
+// Uma linha por evento de pagamento com assinatura válida (A08/A09). Alimenta o painel
+// /admin/monitor. Não guarda número de cartão: só o valor e o resultado.
+model PaymentTransaction {
+  id            String            @id @default(cuid())
+  eventId       String            @unique // eventId do gateway (o mesmo de WebhookEvent)
+  orderId       String
+  gatewayStatus String // "approved" ou "declined", como o gateway mandou
+  amountCents   Int
+  result        TransactionResult
+  reason        String? // motivo da recusa quando result = REJECTED
+  createdAt     DateTime          @default(now())
+  order         Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([orderId])
 }
 
 // Nunca gravar senha, token, CPF ou cartão aqui (A09).

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { AuthShell } from "@/components/auth-shell";
 import { Field, FormMessage, SubmitButton } from "@/components/form";
@@ -10,10 +11,15 @@ export default function ForgotPasswordPage() {
   const [state, action] = useActionState(forgotPasswordAction, undefined);
   return (
     <AuthShell title="Esqueci minha senha" subtitle="Informe seu e-mail. O link vale por 15 minutos e só funciona uma vez.">
-      <form action={action} className="space-y-4">
+      <form action={action} className="space-y-5">
         <FormMessage error={state?.error} success={state?.success} />
         <Field label="E-mail" name="email" type="email" autoComplete="email" required maxLength={254} />
         <SubmitButton>Enviar link</SubmitButton>
+        <p className="text-center text-sm">
+          <Link href="/entrar" className="link">
+            ← Voltar para o login
+          </Link>
+        </p>
       </form>
     </AuthShell>
   );

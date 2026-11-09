@@ -5,7 +5,7 @@ import { listAuditLogs } from "@/lib/services/admin";
 
 // Cor do selo conforme a gravidade do evento.
 const actionBadge = (action: string) =>
-  /FAIL|LOCKOUT|DENIED/.test(action) ? "bg-coral" : /OK|CREATED/.test(action) ? "bg-mint" : "bg-paper";
+  /FAIL|LOCKOUT|DENIED|REJECTED|RATE/.test(action) ? "bg-coral" : /OK|CREATED|PAID/.test(action) ? "bg-mint" : "bg-paper";
 
 // A09 — AuditLog, visível só para ADMIN. Metadata já chega sem dados sensíveis (lib/audit.ts).
 export default async function AdminPage({
@@ -22,12 +22,15 @@ export default async function AdminPage({
   const qs = (p: number) => `/admin?${new URLSearchParams({ ...(action ? { acao: action } : {}), pagina: String(p) })}`;
 
   return (
-    <main className="mx-auto max-w-6xl space-y-7 px-4 py-10">
+    <main className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="page-title">Auditoria</h1>
-        <Link href="/admin/usuarios" className="btn btn-sun">Gerenciar usuários</Link>
+        <div>
+          <h1 className="page-title">Auditoria</h1>
+          <p className="mt-1 text-sm text-muted">Eventos de segurança registrados pela aplicação (A09).</p>
+        </div>
+        <Link href="/admin/monitor" className="btn btn-primary">Abrir monitor</Link>
       </div>
-      <form className="flex flex-wrap items-center gap-3 text-sm">
+      <form className="card flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
         <label htmlFor="acao" className="label">Ação</label>
         <select id="acao" name="acao" defaultValue={action ?? ""} className="input w-auto py-1.5">
           <option value="">Todas</option>
@@ -36,7 +39,7 @@ export default async function AdminPage({
           ))}
         </select>
         <button className="btn btn-sm">Filtrar</button>
-        <span className="badge ml-auto">{total} eventos</span>
+        <span className="badge bg-blue ml-auto">{total} eventos</span>
       </form>
       <div className="table-wrap">
         <table className="table-pop min-w-[720px] text-xs">
