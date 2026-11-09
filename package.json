@@ -23,6 +23,7 @@
     "db:seed": "prisma db seed",
     "popular": "tsx --env-file=.env --conditions=react-server scripts/popular.ts",
     "simular": "tsx --env-file=.env --conditions=react-server scripts/popular.ts --continuo --clientes 2 --compras 1 --pagamento aleatorio --intervalo 5",
+    "aula": "tsx --env-file=.env --conditions=react-server scripts/popular.ts --continuo --clientes 2 --compras 1 --pagamento aleatorio --intervalo 180",
     "audit": "npm audit --omit=dev"
   },
   "prisma": {

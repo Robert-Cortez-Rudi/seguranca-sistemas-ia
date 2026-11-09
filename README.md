@@ -128,7 +128,14 @@ Para acompanhar o sistema enquanto a turma tenta quebrá-lo, há duas peças:
    npm run simular
    ```
 
-   A cada 5 segundos ele cria 2 clientes, faz 1 compra com cada um e paga pelo webhook
+   Para a aula, com uma rodada a cada **3 minutos**, use:
+
+   ```bash
+   npm run aula
+   ```
+
+   O `npm run simular` faz o mesmo, mas a cada 5 segundos (bom para testar rápido).
+   A cada rodada o script cria 2 clientes, faz 1 compra com cada um e paga pelo webhook
    (80% aprovadas, 20% recusadas). Pare com **Ctrl+C**. Para mudar o ritmo, use o
    `npm run popular` com `--continuo`:
 
