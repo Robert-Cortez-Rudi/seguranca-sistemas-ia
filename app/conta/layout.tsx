@@ -1,5 +1,6 @@
 import { PanelShell, type SideNavItem } from "@/components/side-nav";
 import { getCurrentUser } from "@/lib/auth";
+import { canBuy } from "@/lib/route-access";
 
 // Moldura da área do usuário. A checagem de sessão fica no middleware e em cada página (A01);
 // aqui só se escolhe quais atalhos mostrar para o perfil.
@@ -7,7 +8,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
   const user = await getCurrentUser();
   const items: SideNavItem[] = [
     { href: "/conta", label: "Meus dados", icon: "user", exact: true },
-    ...(user?.role === "CUSTOMER"
+    ...(canBuy(user?.role)
       ? ([
           { href: "/conta/pedidos", label: "Pedidos", icon: "receipt" },
           { href: "/conta/enderecos", label: "Endereços", icon: "pin" },

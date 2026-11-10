@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/(auth)/actions";
 import { getCurrentUser } from "@/lib/auth";
+import { canBuy, canSell } from "@/lib/route-access";
 import { cartCount } from "@/lib/services/cart";
 import { CartIcon, LogoutIcon, SearchIcon, TruckIcon, UserIcon } from "./icons";
 
@@ -31,7 +32,7 @@ function HeaderAction({ href, label, children, badge }: { href: string; label: s
 // Busca é um GET simples para "/" (?q=); o servidor valida o termo com Zod (A05).
 export async function Header() {
   const user = await getCurrentUser();
-  const items = user?.role === "CUSTOMER" ? await cartCount(user.id) : 0;
+  const items = user && canBuy(user.role) ? await cartCount(user.id) : 0;
 
   return (
     <header className="sticky top-0 z-40 bg-paper">
@@ -55,7 +56,7 @@ export async function Header() {
                 <HeaderAction href="/conta" label={`Olá, ${user.name.split(" ")[0]}`}>
                   <UserIcon className="size-6" />
                 </HeaderAction>
-                {user.role === "CUSTOMER" && (
+                {canBuy(user.role) && (
                   <>
                     <HeaderAction href="/conta/pedidos" label="Pedidos">
                       <TruckIcon className="size-6" />
@@ -88,14 +89,14 @@ export async function Header() {
       <nav className="topbar-sub" aria-label="Atalhos">
         <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-2 pb-2 text-sm sm:px-3">
           <Link href="/" className="nav-link whitespace-nowrap">Produtos</Link>
-          {user?.role === "CUSTOMER" && (
+          {canBuy(user?.role) && (
             <>
               <Link href="/conta/pedidos" className="nav-link whitespace-nowrap">Meus pedidos</Link>
               <Link href="/conta/enderecos" className="nav-link whitespace-nowrap">Endereços</Link>
               <Link href="/conta/cartoes" className="nav-link whitespace-nowrap">Cartões</Link>
             </>
           )}
-          {user?.role === "SELLER" && (
+          {canSell(user?.role) && (
             <>
               <Link href="/vendedor" className="nav-link whitespace-nowrap">Meus produtos</Link>
               <Link href="/vendedor/vendas" className="nav-link whitespace-nowrap">Vendas e entregas</Link>

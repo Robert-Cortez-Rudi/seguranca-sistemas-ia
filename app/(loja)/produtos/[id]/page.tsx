@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRightIcon, LockIcon, ShieldIcon, StoreIcon, TruckIcon } from "@/components/icons";
 import { getCurrentUser } from "@/lib/auth";
+import { canBuy } from "@/lib/route-access";
 import { ProductImage } from "@/components/product-image";
 import { Price } from "@/components/price";
 import { MAX_ITEM_QUANTITY } from "@/lib/schemas";
@@ -58,14 +59,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           <div className="mt-6">
             {product.stock === 0 ? (
               <p className="notice notice-error">Este produto está esgotado no momento.</p>
-            ) : user?.role === "CUSTOMER" ? (
+            ) : canBuy(user?.role) ? (
               <AddToCart productId={product.id} max={Math.min(product.stock, MAX_ITEM_QUANTITY)} />
             ) : !user ? (
               <Link href={`/entrar?next=/produtos/${product.id}`} className="btn btn-primary btn-lg w-full">
                 Entre para comprar
               </Link>
             ) : (
-              <p className="notice">Somente contas de cliente podem comprar.</p>
+              <p className="notice">Somente contas de cliente ou administrador podem comprar.</p>
             )}
           </div>
 

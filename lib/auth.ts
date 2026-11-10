@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { audit } from "./audit";
 import { getRequestContext } from "./request";
+import { hasRole } from "./route-access";
 import { validateSessionToken, type SessionUser, type ValidSession } from "./session";
 
 // Prefixo __Host-: o navegador só aceita o cookie com Secure, Path=/ e sem Domain,
@@ -41,13 +42,13 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 }
 
 /**
- * A01 — Exige login e, se informado, um dos perfis.
+ * A01 — Exige login e, se informado, um dos perfis (ADMIN passa em todos, ver hasRole).
  * Perfil errado recebe 404, não 403: não confirma que a página existe.
  */
 export async function requireUser(roles?: Role[]): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/entrar");
-  if (roles && !roles.includes(user.role)) {
+  if (roles && !hasRole(user.role, roles)) {
     await audit("ACCESS_DENIED", await getRequestContext(), { userId: user.id, metadata: { required: roles.join(",") } });
     notFound();
   }

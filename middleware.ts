@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { buildCsp, generateNonce } from "@/lib/csp";
 import { isCrossSiteApiRequest } from "@/lib/origin";
-import { requiredRoles } from "@/lib/route-access";
+import { hasRole, requiredRoles } from "@/lib/route-access";
 import { validateSessionToken } from "@/lib/session";
 
 // Roda em Node (estável no Next 15.5) para poder consultar a sessão no banco.
@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
       return withCsp(NextResponse.redirect(login), csp);
     }
 
-    if (!roles.includes(session.user.role)) {
+    if (!hasRole(session.user.role, roles)) {
       await audit(
         "ACCESS_DENIED",
         {

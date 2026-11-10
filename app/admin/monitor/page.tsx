@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { formatDate, formatMoney, ORDER_STATUS_BADGE, ORDER_STATUS_LABEL } from "@/lib/format";
 import {
   getMonitorCounts,
-  listMonitorOrders,
+  listMonitorProducts,
   listMonitorTransactions,
   listMonitorUsers,
   type MonitorTab,
@@ -13,7 +13,7 @@ import {
 } from "@/lib/services/monitor";
 import { RefreshControls } from "./refresh-controls";
 
-// A01/A04/A09 — Monitor do sistema: quantidade e registros de usuários, pedidos e transações.
+// A01/A04/A09 — Monitor do sistema: quantidade e registros de usuários, produtos comprados e transações.
 // Feito para acompanhar a aula enquanto o script `npm run simular` gera dados e a turma
 // tenta quebrar o sistema. Só ADMIN entra (middleware + requireUser); dados sensíveis
 // chegam mascarados do serviço e nada é editável aqui.
@@ -29,7 +29,7 @@ const REASON_LABEL: Record<string, string> = {
 
 const TABS: { key: MonitorTab; label: string }[] = [
   { key: "usuarios", label: "Usuários" },
-  { key: "pedidos", label: "Pedidos" },
+  { key: "produtos", label: "Produtos" },
   { key: "transacoes", label: "Transações" },
 ];
 
@@ -49,7 +49,7 @@ export default async function MonitorPage({
   const page = parseMonitorPage(sp.pagina);
 
   const counts = await getMonitorCounts();
-  const totals = { usuarios: counts.users.total, pedidos: counts.orders.total, transacoes: counts.transactions.total };
+  const totals = { usuarios: counts.users.total, produtos: counts.products.total, transacoes: counts.transactions.total };
 
   return (
     <main className="space-y-6">
@@ -57,7 +57,7 @@ export default async function MonitorPage({
         <div>
           <h1 className="page-title">Monitor do sistema</h1>
           <p className="mt-1 max-w-xl text-sm text-muted">
-            Quantidade de usuários, pedidos e transações de pagamento, com os registros de cada um.
+            Quantidade de usuários, produtos comprados e transações de pagamento, com os registros de cada um.
             Clique em <strong>Atualizar</strong> para ver os números mais recentes.
           </p>
         </div>
@@ -77,11 +77,12 @@ export default async function MonitorPage({
           <span className="badge bg-blue">{plural(counts.users.byRole.ADMIN, "admin", "admins")}</span>
         </MetricCard>
         <MetricCard
-          href={href("pedidos")}
-          active={tab === "pedidos"}
-          label="Pedidos"
-          value={counts.orders.total}
-          recent={counts.orders.recent}
+          href={href("produtos")}
+          active={tab === "produtos"}
+          label="Produtos"
+          value={counts.products.total}
+          recent={counts.products.recent}
+          extra={`${plural(counts.products.units, "unidade", "unidades")} · ${plural(counts.orders.total, "pedido", "pedidos")}`}
         >
           <span className="badge dot bg-mint">{plural(counts.orders.byStatus.PAID, "pago", "pagos")}</span>
           <span className="badge dot bg-sun">{counts.orders.byStatus.PENDING_PAYMENT ?? 0} aguardando</span>
@@ -111,7 +112,7 @@ export default async function MonitorPage({
           ))}
         </nav>
         {tab === "usuarios" && <UsersTable page={page} />}
-        {tab === "pedidos" && <OrdersTable page={page} />}
+        {tab === "produtos" && <ProductsTable page={page} />}
         {tab === "transacoes" && <TransactionsTable page={page} />}
       </section>
     </main>
@@ -212,39 +213,51 @@ async function UsersTable({ page }: { page: number }) {
   );
 }
 
-async function OrdersTable({ page }: { page: number }) {
-  const { rows, total, pages } = await listMonitorOrders(page);
+async function ProductsTable({ page }: { page: number }) {
+  const { rows, total, pages } = await listMonitorProducts(page);
   return (
     <>
       <div className="overflow-x-auto">
-        <table className="table-pop min-w-[960px] text-sm">
+        <table className="table-pop min-w-[1100px] text-sm">
           <thead>
-            <tr><th>Criado em</th><th>Pedido</th><th>Cliente</th><th className="text-right">Itens</th><th className="text-right">Subtotal</th><th className="text-right">Frete</th><th className="text-right">Total</th><th>UF</th><th>Cartão</th><th>Status</th><th>Pago em</th></tr>
+            <tr>
+              <th>Comprado em</th><th>Produto</th><th className="text-right">Qtd.</th><th className="text-right">Preço pago</th>
+              <th className="text-right">Total</th><th className="text-right">Preço atual</th><th className="text-right">Estoque</th>
+              <th>Vendedor</th><th>Comprador</th><th>UF</th><th>Cartão</th><th>Status</th><th>Pedido</th>
+            </tr>
           </thead>
           <tbody>
-            {rows.map((o) => (
-              <tr key={o.id}>
-                <td className="num whitespace-nowrap text-muted">{formatDate(o.createdAt)}</td>
-                <td className="whitespace-nowrap font-mono text-xs" title={o.id}>{shortId(o.id)}</td>
+            {rows.map((p) => (
+              <tr key={p.id}>
+                <td className="num whitespace-nowrap text-muted">{formatDate(p.createdAt)}</td>
                 <td>
-                  <span className="block font-semibold">{o.user.name}</span>
-                  <span className="block text-xs text-muted">{o.user.email}</span>
+                  <Link href={`/produtos/${p.productId}`} className="block font-semibold hover:underline">{p.productName}</Link>
+                  {!p.productActive && <span className="block text-xs text-muted">fora da loja</span>}
                 </td>
-                <td className="num text-right">{o.items}</td>
-                <td className="num text-right">{formatMoney(o.subtotalCents)}</td>
-                <td className="num text-right">{formatMoney(o.shippingCents)}</td>
-                <td className="num text-right font-semibold">{formatMoney(o.totalCents)}</td>
-                <td>{o.shippingUf}</td>
-                <td className="num whitespace-nowrap font-mono text-xs">{o.card}</td>
-                <td><span className={`badge dot ${ORDER_STATUS_BADGE[o.status]}`}>{ORDER_STATUS_LABEL[o.status]}</span></td>
-                <td className="num whitespace-nowrap text-muted">{o.paidAt ? formatDate(o.paidAt) : "—"}</td>
+                <td className="num text-right">{p.quantity}</td>
+                <td className="num whitespace-nowrap text-right">{formatMoney(p.unitPriceCents)}</td>
+                <td className="num whitespace-nowrap text-right font-semibold">{formatMoney(p.totalCents)}</td>
+                <td className="num whitespace-nowrap text-right text-muted">{formatMoney(p.currentPriceCents)}</td>
+                <td className="num text-right">{p.stock}</td>
+                <td>
+                  <span className="block font-semibold">{p.seller.name}</span>
+                  <span className="block text-xs text-muted">{p.seller.email}</span>
+                </td>
+                <td>
+                  <span className="block font-semibold">{p.customer.name}</span>
+                  <span className="block text-xs text-muted">{p.customer.email}</span>
+                </td>
+                <td>{p.uf}</td>
+                <td className="num whitespace-nowrap font-mono text-xs">{p.card}</td>
+                <td><span className={`badge dot ${ORDER_STATUS_BADGE[p.status]}`}>{ORDER_STATUS_LABEL[p.status]}</span></td>
+                <td className="whitespace-nowrap font-mono text-xs" title={p.orderId}>{shortId(p.orderId)}</td>
               </tr>
             ))}
-            {rows.length === 0 && <Empty text="Nenhum pedido nesta página." />}
+            {rows.length === 0 && <Empty text="Nenhum produto comprado ainda. Rode `npm run simular` para gerar compras." />}
           </tbody>
         </table>
       </div>
-      <Pagination tab="pedidos" page={page} pages={pages} total={total} />
+      <Pagination tab="produtos" page={page} pages={pages} total={total} />
     </>
   );
 }

@@ -5,12 +5,12 @@ import { db } from "../db";
 import { maskCard, maskCpf, maskPhone } from "../mask";
 
 // A01/A04/A09 — Painel de monitoramento do ADMIN (/admin/monitor).
-// Mostra quantos usuários, pedidos e transações existem e os registros de cada um.
+// Mostra quantos usuários, produtos comprados e transações existem e os registros de cada um.
 // Dados sensíveis saem SEMPRE mascarados (CPF ***.456.789-**, cartão **** 4242),
 // e nenhuma consulta traz hash de senha, segredo TOTP ou número de cartão (select explícito).
 
 export const MONITOR_PAGE_SIZE = 25;
-export const MONITOR_TABS = ["usuarios", "pedidos", "transacoes"] as const;
+export const MONITOR_TABS = ["usuarios", "produtos", "transacoes"] as const;
 export type MonitorTab = (typeof MONITOR_TABS)[number];
 
 /** Janela usada no indicador "nos últimos minutos" dos cartões de contagem. */
@@ -37,11 +37,14 @@ function safeMask(enc: string | null, context: string, mask: (v: string) => stri
 
 export async function getMonitorCounts() {
   const since = new Date(Date.now() - RECENT_WINDOW_MIN * 60_000);
-  const [usersByRole, usersRecent, ordersByStatus, ordersRecent, txByResult, txRecent, approved] = await Promise.all([
+  const [usersByRole, usersRecent, ordersByStatus, ordersRecent, items, itemsRecent, itemsPaid, txByResult, txRecent, approved] = await Promise.all([
     db.user.groupBy({ by: ["role"], _count: { _all: true } }),
     db.user.count({ where: { createdAt: { gte: since } } }),
     db.order.groupBy({ by: ["status"], _count: { _all: true } }),
     db.order.count({ where: { createdAt: { gte: since } } }),
+    db.orderItem.aggregate({ _count: { _all: true }, _sum: { quantity: true } }),
+    db.orderItem.count({ where: { order: { createdAt: { gte: since } } } }),
+    db.orderItem.aggregate({ where: { order: { status: "PAID" } }, _sum: { quantity: true } }),
     db.paymentTransaction.groupBy({ by: ["result"], _count: { _all: true } }),
     db.paymentTransaction.count({ where: { createdAt: { gte: since } } }),
     db.paymentTransaction.aggregate({ where: { result: "APPROVED" }, _sum: { amountCents: true } }),
@@ -59,6 +62,13 @@ export async function getMonitorCounts() {
       total: sum(ordersByStatus),
       recent: ordersRecent,
       byStatus: Object.fromEntries(ordersByStatus.map((r) => [r.status, r._count._all])) as Partial<Record<OrderStatus, number>>,
+    },
+    // Cada linha é um produto dentro de um pedido (OrderItem).
+    products: {
+      total: items._count._all,
+      recent: itemsRecent,
+      units: items._sum.quantity ?? 0,
+      unitsPaid: itemsPaid._sum.quantity ?? 0,
     },
     transactions: {
       total: sum(txByResult),
@@ -108,34 +118,49 @@ export async function listMonitorUsers(page: number) {
   };
 }
 
-export async function listMonitorOrders(page: number) {
+/** Produtos comprados: uma linha por item de pedido, com o produto, quem comprou e quem vendeu. */
+export async function listMonitorProducts(page: number) {
   const [rows, total] = await Promise.all([
-    db.order.findMany({
+    db.orderItem.findMany({
       select: {
         id: true,
-        status: true,
-        subtotalCents: true,
-        shippingCents: true,
-        totalCents: true,
-        shippingUf: true,
-        createdAt: true,
-        paidAt: true,
-        user: { select: { name: true, email: true } },
-        paymentCard: { select: { last4: true, brand: true } },
-        _count: { select: { items: true } },
+        productId: true,
+        productName: true, // nome gravado no momento da compra
+        quantity: true,
+        unitPriceCents: true, // preço lido do banco no checkout (A06)
+        product: { select: { priceCents: true, stock: true, active: true, seller: { select: { name: true, email: true } } } },
+        order: {
+          select: {
+            id: true,
+            status: true,
+            shippingUf: true,
+            createdAt: true,
+            user: { select: { name: true, email: true } },
+            paymentCard: { select: { last4: true, brand: true } },
+          },
+        },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ order: { createdAt: "desc" } }, { id: "asc" }],
       ...pageArgs(page),
     }),
-    db.order.count(),
+    db.orderItem.count(),
   ]);
   return {
     total,
     pages: pagesFor(total),
-    rows: rows.map(({ paymentCard, _count, ...o }) => ({
-      ...o,
-      card: `${paymentCard.brand} ${maskCard(paymentCard.last4)}`,
-      items: _count.items,
+    rows: rows.map(({ product, order, ...i }) => ({
+      ...i,
+      totalCents: i.unitPriceCents * i.quantity,
+      currentPriceCents: product.priceCents,
+      stock: product.stock,
+      productActive: product.active,
+      seller: product.seller,
+      orderId: order.id,
+      status: order.status,
+      uf: order.shippingUf,
+      createdAt: order.createdAt,
+      customer: order.user,
+      card: `${order.paymentCard.brand} ${maskCard(order.paymentCard.last4)}`,
     })),
   };
 }

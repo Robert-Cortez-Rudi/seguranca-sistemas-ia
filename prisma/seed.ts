@@ -12,6 +12,8 @@ const db = new PrismaClient();
 
 const USERS: { email: string; name: string; role: Role; password: string }[] = [
   { email: "admin@secureshop.local", name: "Ana Admin", role: "ADMIN", password: "Admin-Seed-2026!" },
+  // Login compartilhado da aula: ADMIN tem acesso total (comprar, vender, monitor, auditoria).
+  { email: "nelson.alves@ifsp.edu.br", name: "Nelson Alves", role: "ADMIN", password: "Ifsp100%Ifsp100%" },
   { email: "vendedor1@secureshop.local", name: "Bruno Vendedor", role: "SELLER", password: "Vendedor1-Seed-2026!" },
   { email: "vendedor2@secureshop.local", name: "Carla Vendedora", role: "SELLER", password: "Vendedor2-Seed-2026!" },
   { email: "cliente1@secureshop.local", name: "Diego Cliente", role: "CUSTOMER", password: "Cliente1-Seed-2026!" },
@@ -59,7 +61,8 @@ async function main() {
       await db.product.create({ data: { ...p, sellerId: user.id } });
     }
 
-    if (u.role === "CUSTOMER") {
+    // Quem compra (cliente e ADMIN, que tem acesso total) já começa com endereço e cartão de teste.
+    if (u.role === "CUSTOMER" || u.role === "ADMIN") {
       const address = {
         recipient: u.name,
         cep: "01310100",

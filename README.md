@@ -61,12 +61,18 @@ Criados pelo `npm run db:seed`. São dados fictícios, só para uso local.
 | Perfil | E-mail | Senha |
 |---|---|---|
 | ADMIN | admin@secureshop.local | `Admin-Seed-2026!` |
+| ADMIN (professor) | nelson.alves@ifsp.edu.br | `Ifsp100%Ifsp100%` |
 | SELLER | vendedor1@secureshop.local | `Vendedor1-Seed-2026!` |
 | SELLER | vendedor2@secureshop.local | `Vendedor2-Seed-2026!` |
 | CUSTOMER | cliente1@secureshop.local | `Cliente1-Seed-2026!` |
 | CUSTOMER | cliente2@secureshop.local | `Cliente2-Seed-2026!` |
 | CUSTOMER | cliente3@secureshop.local | `Cliente3-Seed-2026!` |
 
+- **ADMIN tem acesso total**: compra (carrinho, checkout, pedidos, endereços e cartões), vende
+  (cadastra produtos e atualiza entregas) e administra (Monitor, Auditoria e Usuários). O login
+  `nelson.alves@ifsp.edu.br` é o login compartilhado da aula (professor). Mesmo com acesso total, ele só vê
+  os **próprios** pedidos, endereços, cartões e produtos; os dados de todos aparecem no Monitor,
+  mascarados. Os administradores já começam com endereço e cartão de teste.
 - Cartão de teste: `4242 4242 4242 4242`, com qualquer validade futura e qualquer CVV.
 - O pagamento é simulado: na tela de pagamento há os botões "Aprovar" e "Recusar".
 - E-mails de recuperação de senha aparecem no Mailpit, em **http://localhost:8025**.
@@ -109,18 +115,18 @@ Para rodar uma única vez numa data: `/SC ONCE /SD 05/10/2026 /ST 14:00`. Para v
 use `schtasks /Query /TN "SecureShop semana3"`. Para apagar, use `schtasks /Delete /TN "SecureShop semana3" /F`.
 O computador precisa estar ligado e com o Docker e a aplicação rodando no horário.
 
-## Monitor da aula (usuários, pedidos e transações)
+## Monitor da aula (usuários, produtos e transações)
 
 Para acompanhar o sistema enquanto a turma tenta quebrá-lo, há duas peças:
 
 1. **Tela** — entre como `admin@secureshop.local` e abra **http://localhost:3000/admin/monitor**
    (ou "Monitor" no menu do admin). Ela mostra:
-   - a **quantidade** de usuários, pedidos e transações, com quantos surgiram nos últimos 10 minutos
+   - a **quantidade** de usuários, produtos comprados e transações, com quantos surgiram nos últimos 10 minutos
      e a divisão por tipo (clientes/vendedores/admins; pagos/aguardando/cancelados;
      aprovadas/recusadas/rejeitadas);
    - o botão **Atualizar**, que busca os números de novo, e a opção de atualização automática
      a cada 5, 10 ou 30 segundos;
-   - uma **tabela com os registros** de cada um dos três (abas Usuários, Pedidos e Transações),
+   - uma **tabela com os registros** de cada um dos três (abas Usuários, Produtos e Transações),
      25 por página, mais recentes primeiro. CPF, telefone e cartão aparecem mascarados.
 2. **Script** — com a aplicação rodando (`npm run dev`), em outro terminal:
 

@@ -24,3 +24,17 @@ export function requiredRoles(pathname: string): Role[] | null {
   const rule = PROTECTED.find((r) => path === r.prefix || path.startsWith(`${r.prefix}/`));
   return rule ? rule.roles : null;
 }
+
+/**
+ * A01 — Decide se o perfil entra numa área. ADMIN é o perfil de acesso total (o login do
+ * professor usado em aula): compra, vende e administra. Mesmo assim ele só enxerga os PRÓPRIOS
+ * pedidos, endereços, cartões e produtos, porque cada serviço filtra pelo userId da sessão.
+ */
+export function hasRole(role: Role, allowed: readonly Role[]): boolean {
+  return role === "ADMIN" || allowed.includes(role);
+}
+
+/** Perfis que podem comprar (carrinho, checkout, pedidos, endereços e cartões). */
+export const canBuy = (role: Role | undefined) => role !== undefined && hasRole(role, ["CUSTOMER"]);
+/** Perfis que podem vender (cadastrar produtos e atualizar entregas). */
+export const canSell = (role: Role | undefined) => role !== undefined && hasRole(role, ["SELLER"]);

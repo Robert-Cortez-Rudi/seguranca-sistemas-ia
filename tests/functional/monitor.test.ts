@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { listProducts, parseSearch } from "@/lib/services/catalog";
 import {
   getMonitorCounts,
-  listMonitorOrders,
+  listMonitorProducts,
   listMonitorTransactions,
   listMonitorUsers,
   MONITOR_PAGE_SIZE,
@@ -117,15 +117,36 @@ describe("monitor do admin (A01/A04)", () => {
     expect(rows[0]!.cpf).toBe("***.***.***-**");
   });
 
-  it("pedidos e transações mostram só o cartão mascarado", async () => {
+  it("produtos comprados e transações mostram só o cartão mascarado", async () => {
     const { order } = await pendingOrder();
     await pay(order.id);
-    const orders = await listMonitorOrders(1);
+    const orders = await listMonitorProducts(1);
     const txs = await listMonitorTransactions(1);
     expect(orders.rows[0]!.card).toBe("VISA **** 4242");
     expect(txs.rows[0]!.card).toBe("VISA **** 4242");
     expect(JSON.stringify([orders, txs])).not.toContain("4242424242424242");
     expect(orders.rows[0]).not.toHaveProperty("shippingAddressEnc");
+  });
+
+  it("aba Produtos lista cada produto comprado com vendedor, comprador e status do pedido", async () => {
+    const { customer, order } = await pendingOrder();
+    await pay(order.id);
+    const { rows, total } = await listMonitorProducts(1);
+    expect(total).toBe(1);
+    expect(rows[0]).toMatchObject({
+      productName: "Caneca",
+      quantity: 1,
+      unitPriceCents: 3000,
+      totalCents: 3000,
+      stock: 5,
+      orderId: order.id,
+      status: "PAID",
+      uf: "SP",
+      customer: { email: customer.email },
+    });
+    expect(rows[0]!.seller.email).toMatch(/@/);
+    const c = await getMonitorCounts();
+    expect(c.products).toMatchObject({ total: 1, units: 1, unitsPaid: 1 });
   });
 
   it("pagina de 25 em 25, mais recentes primeiro", async () => {
@@ -139,9 +160,10 @@ describe("monitor do admin (A01/A04)", () => {
   });
 
   it("parâmetros da URL inválidos caem no padrão", () => {
-    expect(parseMonitorTab("pedidos")).toBe("pedidos");
+    expect(parseMonitorTab("produtos")).toBe("produtos");
+    expect(parseMonitorTab("pedidos")).toBe("usuarios");
     expect(parseMonitorTab("' OR 1=1--")).toBe("usuarios");
-    expect(parseMonitorTab(["pedidos"])).toBe("usuarios");
+    expect(parseMonitorTab(["produtos"])).toBe("usuarios");
     expect(parseMonitorPage("3")).toBe(3);
     expect(parseMonitorPage("-5")).toBe(1);
     expect(parseMonitorPage("abc")).toBe(1);

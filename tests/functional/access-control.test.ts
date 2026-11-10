@@ -51,6 +51,14 @@ describe("IDOR (A01)", () => {
     expect((await getOrderForCustomer(b.id, orderB.id))?.id).toBe(orderB.id);
   });
 
+  it("ADMIN (acesso total) também não vê pedido de outro usuário pelas telas de compra", async () => {
+    const admin = await createUser({ role: "ADMIN" });
+    const b = await createUser();
+    const orderB = await orderFor(b.id);
+    expect(await getOrderForCustomer(admin.id, orderB.id)).toBeNull();
+    expect((await listOrdersForCustomer(admin.id)).map((o) => o.id)).not.toContain(orderB.id);
+  });
+
   it("pedido de outro e pedido inexistente dão o mesmo resultado (sem enumeração)", async () => {
     const a = await createUser();
     const b = await createUser();

@@ -16,7 +16,8 @@ Todo código deve priorizar segurança sobre conveniência.
 ## Perfis (RBAC)
 - CUSTOMER: compra, vê só os próprios pedidos e dados
 - SELLER: cadastra produtos, vê só as próprias vendas, atualiza status de entrega
-- ADMIN: vê AuditLog e gerencia usuários
+- ADMIN: acesso total (compra, vende, vê Monitor/AuditLog e gerencia usuários); usado como
+  login compartilhado do professor na aula. Continua vendo só os próprios pedidos/cartões/produtos.
 
 ## Modelo de dados (mínimo)
 User, Session, PasswordResetToken, Address, PaymentCard, Product,

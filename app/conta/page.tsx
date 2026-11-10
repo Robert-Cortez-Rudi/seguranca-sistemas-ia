@@ -4,8 +4,9 @@ import { requireUser } from "@/lib/auth";
 import { decrypt } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { maskCpf, maskPhone } from "@/lib/mask";
+import { canBuy } from "@/lib/route-access";
 
-const ROLE_LABEL = { CUSTOMER: "Cliente", SELLER: "Vendedor", ADMIN: "Administrador" } as const;
+const ROLE_LABEL = { CUSTOMER: "Cliente", SELLER: "Vendedor", ADMIN: "Administrador (acesso total)" } as const;
 
 // A01/A04 — Dados do próprio usuário, sempre mascarados. O select explícito
 // traz só o necessário; o dado completo nunca sai do servidor.
@@ -20,7 +21,7 @@ export default async function AccountPage() {
 
   const links = [
     { href: "/conta/seguranca", label: "Segurança", hint: "Senha e verificação em duas etapas", icon: KeyIcon },
-    ...(user.role === "CUSTOMER"
+    ...(canBuy(user.role)
       ? [
           { href: "/conta/pedidos", label: "Meus pedidos", hint: "Acompanhe pagamentos e entregas", icon: ReceiptIcon },
           { href: "/conta/enderecos", label: "Endereços", hint: "Onde entregar suas compras", icon: PinIcon },
